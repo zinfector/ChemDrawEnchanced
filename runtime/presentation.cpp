@@ -6,6 +6,7 @@
 #include "placement-runtime.hpp"
 #include "chemistry-worker.hpp"
 #include "smart-align.hpp"
+#include "reaction-suggestion.hpp"
 #include <intrin.h>
 
 namespace cd {
@@ -435,8 +436,12 @@ static bool documentIdle(Obj doc) {
     }
     if(onUI()&&doc&&!trackingDepth&&drawingPageReady(doc,more)&&placementChemistryPending(doc))
         placementChemistrySettled(windowFor(doc));
-    if(onUI()&&doc&&!more&&!synchronous&&!dispatchWindow&&!paintDepth&&!trackingDepth&&
-        !GetCapture()&&drawingGeometryReady(doc))warmSmartAlignmentPage(doc);
+    if(onUI()&&doc&&!synchronous&&!dispatchWindow&&!paintDepth&&!trackingDepth&&
+        !GetCapture()&&drawingGeometryReady(doc)) {
+        warmSmartAlignmentPage(doc);idleReactionSuggestions(doc);
+        if(auto gpu=gpuPreviews.find(windowFor(doc));gpu!=gpuPreviews.end()&&gpu->second)
+            gpu->second->reactionSuggestion(reactionSuggestionPreview(doc));
+    }
     return more;
 }
 static bool offscreenValid(Obj doc) {
@@ -539,6 +544,9 @@ static void refreshGhost(Obj doc) {
         }
         GhostBond ghost{};
         if(!makeToolGhost(page,target,mouse,tool,ghost)) { hide();return; }
+        UINT dpi=GetDpiForWindow(w);if(!dpi)dpi=96;
+        const double unitsPerDip=(animated?animatedPaper.sourceUnits/std::max(sx,sy):at<double>(scale,8))*double(dpi)/96;
+        smartAlignmentGhost(page,target,tool,ghost,unitsPerDip);
         ghost.cursorAnchor=cursor;ghost.cursorAnchored=target==nullptr;
         ghostInputs.insert_or_assign(w,GhostInput{target,mouse,epoch,tool,cursor});
         gpu->second->ghost(ghost);
@@ -897,6 +905,7 @@ static void setSize(Obj doc,int width,int height) {
     refreshWorkspace(doc);
 }
 static void scrolling(Obj doc,Obj port,const int* x,const int* y) {
+    ReactionCameraScope reactionCamera;
     HWND w=onUI()&&doc?windowFor(doc):nullptr;
     if(w) cancelGhostGesture(w);
     if(w&&!cameraCommitDepth) clearGhost(w);
@@ -1890,11 +1899,25 @@ static LRESULT WINAPI documentProc(HWND w,UINT m,WPARAM a,LPARAM b) {
         else KillTimer(w,drawingCommitTimer);
         return 0;
     }
+    if(m==WM_TIMER&&a==reactionSuggestionTimer) {
+        KillTimer(w,reactionSuggestionTimer);
+        Obj doc=fn<Obj(*)(LONG_PTR)>(0x3e75c0)(GetWindowLongPtrW(w,GWLP_USERDATA));
+        if(doc&&windowFor(doc)==w&&drawingGeometryReady(doc)) {
+            idleReactionSuggestions(doc);
+            if(auto gpu=gpuPreviews.find(w);gpu!=gpuPreviews.end()&&gpu->second)
+                gpu->second->reactionSuggestion(reactionSuggestionPreview(doc));
+        }
+        return 0;
+    }
     if(m==WM_LBUTTONDOWN||m==WM_RBUTTONDOWN||m==WM_MBUTTONDOWN||m==WM_MOUSEWHEEL||m==WM_MOUSEHWHEEL||
         m==WM_HSCROLL||m==WM_VSCROLL||m==WM_CANCELMODE||m==WM_CLOSE||m==WM_SIZE||(m==WM_COMMAND&&!trackingDepth)||
         m==WM_SYSCOMMAND||m==WM_KEYDOWN||m==WM_SYSKEYDOWN||m==WM_MDIACTIVATE||
         m==WM_DPICHANGED||m==WM_DISPLAYCHANGE||(m==WM_KILLFOCUS&&!trackingDepth)) cancelGhostGesture(w);
     MouseBondPlacementScope placement(w,m,b);
+    struct AlignmentPlacementScope {
+        bool entered{};
+        ~AlignmentPlacementScope(){if(entered)endSmartGhostPlacement();}
+    } alignmentPlacement{m==WM_LBUTTONDOWN};
     if(m==WM_LBUTTONDOWN) {
         // Validate the actual submitted preview against live hit testing. Native
         // hover invalidations change the cache generation without changing what
@@ -1910,13 +1933,24 @@ static LRESULT WINAPI documentProc(HWND w,UINT m,WPARAM a,LPARAM b) {
                     GhostTool tool{};
                     const Point mouse{fn<double(*)(Obj,double)>(0x3c5d80)(scale,double(short(LOWORD(b)))+at<int>(port,0xa8)),
                         fn<double(*)(Obj,double)>(0x3c5da0)(scale,double(short(HIWORD(b)))+at<int>(port,0xac)),0};
+                    const POINT clicked{LONG(short(LOWORD(b))),LONG(short(HIWORD(b)))};
+                    UINT clickDpi=GetDpiForWindow(w);if(!clickDpi)clickDpi=96;
+                    const bool nearShown=shown.cursorAnchored?
+                        std::abs(clicked.x-shown.cursorAnchor.x)<=std::max(1,GetSystemMetricsForDpi(SM_CXDRAG,clickDpi))&&
+                        std::abs(clicked.y-shown.cursorAnchor.y)<=std::max(1,GetSystemMetricsForDpi(SM_CYDRAG,clickDpi)):
+                        std::hypot(mouse.x-shown.pressPoint.x,mouse.y-shown.pressPoint.y)<=at<double>(scale,8);
+                    if(readGhostTool(page,tool)&&tool.key==shown.toolKey&&nearShown) {
+                        Obj target=findToolGhostTarget(page,mouse);
+                        const bool matches=shown.identity?target&&at<uint64_t>(target,0xb0)+1==shown.identity:!target;
+                        if(matches)beginSmartGhostPlacement(page,shown,clicked);
+                    }
                     if(std::isfinite(mouse.x)&&std::isfinite(mouse.y)&&readGhostTool(page,tool)&&tool.key==shown.toolKey&&
                         !nativeArrowTool(tool.tool)) {
                         Obj target=findToolGhostTarget(page,mouse);
                         // Never dereference the old hover cache's native pointer.
                         const bool matches=shown.identity?target&&at<uint8_t>(target,0x34)&&
                             vf<bool(*)(Obj)>(target,0xb8)(target)&&at<uint64_t>(target,0xb0)+1==shown.identity:
-                            !target&&std::hypot(mouse.x-shown.pressPoint.x,mouse.y-shown.pressPoint.y)<=at<double>(scale,8);
+                            !target&&nearShown;
                         POINT pressed{LONG(short(LOWORD(b))),LONG(short(HIWORD(b)))};
                         if(matches&&ClientToScreen(w,&pressed)&&gpu->second->beginGhostPlacement(shown)) {
                             ghostGestures.insert_or_assign(w,GhostGesture{pressed});
@@ -2023,6 +2057,14 @@ static LRESULT WINAPI documentProc(HWND w,UINT m,WPARAM a,LPARAM b) {
         if(m!=WM_KEYUP&&m!=WM_SYSKEYUP) bumpGeneration();
     }
     if(input&&!trackingDepth) completeDrawingCommit(w);
+    if(m==WM_KEYDOWN&&(a==VK_ESCAPE||a==VK_RETURN)) {
+        Obj doc=fn<Obj(*)(LONG_PTR)>(0x3e75c0)(GetWindowLongPtrW(w,GWLP_USERDATA));
+        if(doc&&windowFor(doc)==w&&reactionSuggestionShortcut(doc,m,a,b)) {
+            if(auto gpu=gpuPreviews.find(w);gpu!=gpuPreviews.end()&&gpu->second)
+                gpu->second->reactionSuggestion(reactionSuggestionPreview(doc));
+            return 0;
+        }
+    }
     HWND saved=dispatchWindow;dispatchWindow=w;
     HWND savedUpdateWindow=updateWindow;const RectI savedUpdateBounds=updateBounds;
     if(m==WM_PAINT) {
@@ -2046,6 +2088,11 @@ static LRESULT WINAPI documentProc(HWND w,UINT m,WPARAM a,LPARAM b) {
         updateWindow=savedUpdateWindow;updateBounds=savedUpdateBounds;throw; }
     if(wheelZoom) --zoomDispatch;wheelNotches=savedNotches;wheelCursor=savedCursor;haveWheelCursor=savedHaveCursor;dispatchWindow=saved;
     updateWindow=savedUpdateWindow;updateBounds=savedUpdateBounds;
+    if(input&&!trackingDepth) {
+        Obj doc=fn<Obj(*)(LONG_PTR)>(0x3e75c0)(GetWindowLongPtrW(w,GWLP_USERDATA));
+        if(doc&&windowFor(doc)==w)if(auto gpu=gpuPreviews.find(w);gpu!=gpuPreviews.end()&&gpu->second)
+            gpu->second->reactionSuggestion(reactionSuggestionPreview(doc));
+    }
     if((m==WM_LBUTTONDOWN||m==WM_LBUTTONUP)&&ghostGestures.contains(w)&&!trackingDepth&&!GetCapture()&&
         !(GetAsyncKeyState(VK_LBUTTON)&0x8000)) if(auto gpu=gpuPreviews.find(w);gpu!=gpuPreviews.end()&&gpu->second)
             gpu->second->startGhostRelease();
@@ -2061,6 +2108,17 @@ static LRESULT WINAPI documentProc(HWND w,UINT m,WPARAM a,LPARAM b) {
     if(!trackingDepth&&dispatchWindow!=w) postDrawingCommit(w);
     postUndoCamera(w);
     return result;
+}
+bool reactionSuggestionQueuedInput(MSG& message) noexcept {
+    if(message.message!=WM_KEYDOWN||(message.wParam!=VK_ESCAPE&&message.wParam!=VK_RETURN)||trackingDepth)return false;
+    auto gpu=gpuPreviews.find(message.hwnd);if(gpu==gpuPreviews.end()||!gpu->second)return false;
+    try {
+        Obj doc=fn<Obj(*)(LONG_PTR)>(0x3e75c0)(GetWindowLongPtrW(message.hwnd,GWLP_USERDATA));
+        if(!doc||windowFor(doc)!=message.hwnd||!reactionSuggestionPreview(doc))return false;
+        if(message.wParam==VK_RETURN&&(GetKeyState(VK_CONTROL)&0x8000))prepareUndoCamera(doc);
+        if(!reactionSuggestionShortcut(doc,message.message,message.wParam,message.lParam))return false;
+        gpu->second->reactionSuggestion(reactionSuggestionPreview(doc));return true;
+    } catch(...){return false;}
 }
 void installPresentation() {
     Gdiplus::GdiplusStartupInput input;

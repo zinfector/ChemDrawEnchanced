@@ -2,11 +2,11 @@
 
 <img src="ChemDrawPatchLogo.png" alt="ChemDraw Enhanced logo" width="128">
 
-[Download the Windows patch manager](release/ChemDrawPatchManager.exe) ·
-[Download the ZIP package](ChemDraw-Native-Patcher-r95.zip)
+[Download the Windows patch manager](release/ChemDrawPatchManager.exe) Ã‚Â·
+[Download the ZIP package](ChemDraw-Native-Patcher-r107.zip)
 
-Native Windows x64 C++ executable for the existing revision 94 rendering and
-latency patches, with 15 dependency-aware feature toggles. The executable
+Native Windows x64 C++ executable for the existing revision 107 rendering and
+latency patches, with 20 dependency-aware feature toggles. The executable
 contains the runtime DLL, MinHook license, signature catalog, and the supplied
 `ChemDrawPatchLogo.png` as a seven-size Windows icon. No .NET, Python, Ghidra,
 or compiler is required to use the release executable.
@@ -50,15 +50,29 @@ overwrite files changed externally after the interrupted operation.
 | Passive history diagnostics | Bounded toolbar/history metadata log |
 | Rapid Undo/Redo clicks | Ordinary press handling for native double-click messages |
 | Exclude navigation from undo | Recording suppression during zoom/pan commits |
+| Dismiss startup banner | Dismiss when the main window is ready; rearm timeout after bitmap publication |
+| Insert molecules into reaction arrows | Split a supported shaft into two native arrows in the move transaction; Alt bypasses |
+| Paired-electron reaction suggestions | Separate product preview; Ctrl+Enter accepts in one native transaction, Esc dismisses |
+| Align drawing and ghost placement | Endpoint/tangent snapping, simultaneous centerline/spacing constraints and frozen click placement |
+| Passive arrow insertion diagnostics | Native drag stages and insertion rejection reasons |
 
 All optional features currently require the canvas foundation. Workers also
 require deferred placement; arrows/alignment require bounded tracking waits;
 rapid history clicks require toolbar handling. Coupled rendering and object
 lifetime hooks are kept together to preserve their shared state invariants.
+Molecule insertion requires arrows and alignment; reaction suggestions require
+arrows; drawing snaps require alignment. Insertion diagnostics require insertion.
+Both diagnostic toggles are off by default. Existing configuration keys retain
+their bit positions; inspecting an existing installation preserves its selection,
+and the newly added options can be enabled individually.
+
+Revision 107 also includes native ring ghost geometry, molecule attachment
+clearance, native-style reaction preview bond spacing, delay-loaded GPU libraries,
+deferred drawing-hook installation, and demand-driven chemistry engine startup.
 
 ## Automatic discovery and version limits
 
-117 detour targets were exported read-only from the supplied Ghidra database,
+141 detour targets were exported read-only from the supplied Ghidra database,
 including their existing function prototypes. The manager searches executable
 PE sections with patterns that mask relative branch and RIP-relative addresses.
 It accepts exactly one match per target. Short identical accessors use surrounding
@@ -112,6 +126,8 @@ The generated signature catalog and icon are checked in, so regeneration is
 optional. `ghidra/ExportPatchTargets.java` exports function boundaries/prototypes
 with `-readOnly -noanalysis`; `generate-signatures.py` generates masked patterns
 using Capstone from those exports and the local reference binaries.
+Run `python ghidra/inventory-targets.py` before exporting to refresh the inventory
+of base hooks, UI trackers, drawing callbacks and explicit resolved targets.
 
 ```text
 ChemDrawPatchManager.exe --inspect <folder> <report.txt>

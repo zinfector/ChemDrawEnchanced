@@ -3,6 +3,9 @@
 #include "curved-arrow.hpp"
 #include "gpu-ui.hpp"
 #include "smart-align.hpp"
+#include "startup.hpp"
+#include "chemistry-worker.hpp"
+#include "reaction-suggestion.hpp"
 #include <string>
 
 namespace cd {
@@ -36,6 +39,8 @@ void writeGpuUiStatus(const char* message) { writeStatusFile(L"gpu-ui-status.txt
 void writeToolbarStatus(const char* message) { writeStatusFile(L"toolbar-status.txt",message); }
 void writeHistoryStatus(const char* message) { writeStatusFile(L"history-toolbar.txt",message); }
 void writeArrowStatus(const char* message) { writeStatusFile(L"curved-arrow-status.txt",message); }
+void writeReactionStatus(const char* message) { writeStatusFile(L"reaction-suggestion-status.txt",message); }
+void writeArrowInsertionStatus(const char* message) { writeStatusFile(L"arrow-insertion-status.txt",message); }
 
 using WaitFn = int(*)(HWND,int);
 static WaitFn oldWait{};
@@ -125,22 +130,24 @@ extern "C" __declspec(dllexport) void Initialize() noexcept {
         if (MH_Initialize()!=MH_OK) throw std::runtime_error("MinHook initialization failed");
         loadPatchOptions(module);
         preflightDetours();
-        if (!patchEnabled(0)) { writeStatus("Inactive: canvas foundation disabled.\r\n"); MH_Uninitialize(); return; }
+        if (!patchEnabled(0)) {writeStatus("Inactive: canvas foundation disabled.\r\n");MH_Uninitialize();return;}
+        beginStartupPreparation();
         if (patchEnabled(1)) hook(0x5be6b0,boundedWait,oldWait);
         installSpatial(); installBuffers(); installPresentation();
         if (patchEnabled(5)) installPlacementRuntime();
-        if (patchEnabled(7)) installCurvedArrows();
-        if (patchEnabled(8)) installSmartAlignment();
         if (patchEnabled(9)) installUndoCamera();
         if (patchEnabled(14)) installNavigationUndo();
+        if (patchEnabled(17)) installReactionSuggestions();
         if (patchEnabled(10)) installGpuUi();
         if (patchEnabled(11)) installToolbarPaint();
         if (patchEnabled(12)) installHistoryTrace();
         if (MH_EnableHook(MH_ALL_HOOKS)!=MH_OK) throw std::runtime_error("Could not enable hooks");
         char status[160]{};
-        sprintf_s(status,"Active: native patch manager r95, feature mask 0x%08x. See ChemDrawLatency.ini for selected patches.\r\n",patchMask());
+        sprintf_s(status,"Active: native patch manager r107, feature mask 0x%08x. See ChemDrawLatency.ini for selected patches.\r\n",patchMask());
         writeStatus(status);writeGpuStatus(status);
+        finishStartupPreparation();if (patchEnabled(6)) startChemistryWorkers();
     } catch (const std::exception& e) {
+        cancelStartupPreparation();
         removeSmartAlignment();
         removeArrowShortcuts();
         MH_DisableHook(MH_ALL_HOOKS); MH_Uninitialize();

@@ -1,4 +1,5 @@
 #include "runtime.hpp"
+#include "reaction-suggestion.hpp"
 
 namespace cd {
 namespace {
@@ -47,6 +48,7 @@ struct BoundsReadScope {
     ~BoundsReadScope() { --boundsDepth; }
 };
 void zoomWithoutCenter(Obj doc,double scale,bool refresh) {
+    ReactionCameraScope reactionCamera;
     CameraUndoOff off(doc);
     oldZoomWithoutCenter(doc,scale,refresh);
 }
@@ -169,10 +171,8 @@ short redo(Obj doc) {
     traceHistoryOperation(doc,true,false);return result;
 }
 }
-void installNavigationUndo() { hook(0x14a710,zoomWithoutCenter,oldZoomWithoutCenter); }
+void installNavigationUndo() {hook(0x14a710,zoomWithoutCenter,oldZoomWithoutCenter);}
 void installUndoCamera() {
-
-
     hook(0x152c50,undo,oldUndo);hook(0x152ad0,redo,oldRedo);
     hook(0x461460,performRecord,oldPerformRecord);
     hook(0x715a50,invalWindow,oldInvalWindow);

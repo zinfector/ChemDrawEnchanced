@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(ChemDrawNativePatcher VERSION 1.0.95 LANGUAGES C CXX RC)
+project(ChemDrawNativePatcher VERSION 1.0.107 LANGUAGES C CXX RC)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(BUILD_TESTING OFF CACHE BOOL "Build tests" FORCE)

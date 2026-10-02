@@ -44,7 +44,10 @@ struct Engine {
     int (*bondStereo)(Obj,int,bool){};
 };
 static Engine original;
-static unsigned workerCount{};
+static std::atomic<unsigned> workerCount{};
+static unsigned maximumWorkers{},desiredWorkers{1},busyWorkers{};
+static std::wstring engineFolder;
+static bool enginesPrepared{};
 static Obj nativeAtomVtable{},nativeBondVtable{};
 static uint64_t preflightCount{},groupCount{},missCount{};
 static uint64_t fastCount{},componentReuseCount{};
@@ -150,14 +153,14 @@ struct Job {
     std::vector<Part> parts; // UI-only aggregation; never enqueued on a worker
 };
 static std::mutex queueMutex;
-static std::condition_variable queueEvent;
+static std::condition_variable queueEvent,engineEvent;
 static std::deque<std::shared_ptr<Job>> queue;
 static std::vector<std::shared_ptr<Job>> cache; // UI-owned, bounded
 static uint64_t cacheClock{};
 struct Batch { std::vector<std::shared_ptr<Job>> jobs; };
 static std::unordered_map<Obj,Batch> batches; // native page keys never reach worker
 static thread_local std::unordered_map<Obj,std::shared_ptr<Job>> consumers;
-static bool available{};
+static std::atomic<bool> available{};
 static std::atomic<uint64_t> submittedCount{},hitCount{},failedCount{},cancelledCount{},workerTicks{},workerMaximum{};
 static uint64_t nativeCalls{},nativeTicks{},nativeMaximum{},nativeMaximumCaller{};
 uint64_t counter() noexcept { LARGE_INTEGER value{};QueryPerformanceCounter(&value);return uint64_t(value.QuadPart); }
@@ -261,8 +264,12 @@ void run(Engine isolated) noexcept {
         {
             std::unique_lock lock(queueMutex);queueEvent.wait(lock,[]{return !queue.empty();});
             job=std::move(queue.front());queue.pop_front();
+            ++busyWorkers;
         }
-        if(job->cancelled.load()) { job->state.store(3,std::memory_order_release);continue; }
+        if(job->cancelled.load()) {
+            job->state.store(3,std::memory_order_release);
+            std::lock_guard lock(queueMutex);--busyWorkers;continue;
+        }
         job->state.store(1,std::memory_order_release);
         const auto started=counter();
         try { calculate(*job,isolated);job->state.store(job->cancelled.load()?3:2,std::memory_order_release); }
@@ -272,6 +279,7 @@ void run(Engine isolated) noexcept {
         // Wake normal UI dispatch exactly when a result becomes available.
         // The worker never invokes native idle or accesses a document.
         if(const HWND w=job->wakeWindow.load()) PostMessageW(w,WM_NULL,0,0);
+        {std::lock_guard lock(queueMutex);--busyWorkers;}
     }
 }
 unsigned readyState(Job& job) {
@@ -314,6 +322,9 @@ std::shared_ptr<Job> submitSingle(Snapshot s,bool component=false) {
             queue.erase(std::next(abandoned).base());
         }
         queue.push_front(j);++submittedCount;
+        // Expand only for actual concurrent work, never during initial hook setup.
+        const unsigned demand=std::min(maximumWorkers,unsigned(queue.size())+busyWorkers);
+        if(demand>desiredWorkers){desiredWorkers=demand;engineEvent.notify_one();}
     }
     cache.push_back(j);queueEvent.notify_one();return j;
 }
@@ -509,7 +520,7 @@ ChemistryWorkerStats chemistryWorkerStats() noexcept {
     return {submittedCount.load(),hitCount.load(),failedCount.load(),cancelledCount.load(),workerTicks.load(),workerMaximum.load(),
         preflightCount,groupCount,missCount,rejectionCounts,metadataRejectionCounts,
         nativeCalls,nativeTicks,nativeMaximum,nativeMaximumCaller,
-        workerCount,fastCount,componentReuseCount,missReasons};
+        workerCount.load(),fastCount,componentReuseCount,missReasons};
 }
 void installChemistryWorker() {
     const HMODULE native=GetModuleHandleW(L"CoreChemistryCommon.dll");
@@ -524,23 +535,48 @@ void installChemistryWorker() {
     std::wstring filename(path);const auto slash=filename.find_last_of(L"\\/");
     if(slash==std::wstring::npos) return;
     filename.resize(slash+1);
+    engineFolder=std::move(filename);
     const unsigned hardware=std::thread::hardware_concurrency();
-    const unsigned requested=std::min(3u,hardware>2?hardware-2:1u);
-    std::vector<Engine> engines;
-    for(unsigned i=0;i<requested;++i) {
-        const auto privateName=filename+L"ChemDrawLatencyChemistry"+
-            (i?std::to_wstring(i+1):std::wstring{})+L".dll";
-        const HMODULE privateModule=LoadLibraryExW(privateName.c_str(),nullptr,LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
-        if(!privateModule||privateModule==native) continue;
-        engines.push_back(engine(privateModule));
-    }
-    if(engines.empty()) return;
+    maximumWorkers=std::min(3u,hardware>2?hardware-2:1u);
     engineHook(construct,original.cipCtor);engineHook(destroy,original.cipDtor);
     engineHook(atomStereo,original.atomStereo);engineHook(bondStereo,original.bondStereo);
-    for(const auto& owned:engines) {
-        try { std::thread(run,owned).detach();++workerCount; }
-        catch(const std::exception&) { break; }
+    enginesPrepared=true;
+}
+void startChemistryWorkers() noexcept {
+    if(!enginesPrepared)return;
+    try {
+        std::thread([] {
+            SetThreadPriority(GetCurrentThread(),THREAD_PRIORITY_BELOW_NORMAL);
+            // Serialize private module initialization on this worker: Windows
+            // holds the loader lock during DLL initialization. Native UI calls
+            // keep using their original engine until the first worker is ready.
+            for(unsigned i=0;i<maximumWorkers;++i) {
+                {
+                    std::unique_lock lock(queueMutex);
+                    engineEvent.wait(lock,[]{return workerCount.load()<desiredWorkers;});
+                }
+                HMODULE privateModule{};
+                try {
+                    const auto privateName=engineFolder+L"ChemDrawLatencyChemistry"+
+                        (i?std::to_wstring(i+1):std::wstring{})+L".dll";
+                    privateModule=LoadLibraryExW(privateName.c_str(),nullptr,
+                        LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+                    if(!privateModule||privateModule==original.module) {
+                        if(privateModule)FreeLibrary(privateModule);
+                        continue;
+                    }
+                    const auto owned=engine(privateModule);
+                    std::thread(run,owned).detach();
+                    ++workerCount;available.store(true,std::memory_order_release);
+                    PostThreadMessageW(uiThread,WM_NULL,0,0);
+                } catch(const std::exception&) {
+                    if(privateModule)FreeLibrary(privateModule);
+                    OutputDebugStringA("ChemDrawLatency: owned chemistry engine unavailable; native fallback retained.\n");
+                }
+            }
+        }).detach();
+    } catch(const std::exception&) {
+        OutputDebugStringA("ChemDrawLatency: chemistry loader thread unavailable; native fallback retained.\n");
     }
-    available=workerCount!=0;
 }
 }

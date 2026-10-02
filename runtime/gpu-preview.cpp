@@ -1,5 +1,7 @@
 #include "gpu-preview.hpp"
 #include "gpu-scene-renderer.hpp"
+#include "reaction-suggestion.hpp"
+#include <dwrite.h>
 #include <d3d11.h>
 #include <dxgi1_3.h>
 #include <d2d1_1.h>
@@ -9,6 +11,7 @@
 #include <mutex>
 #include <thread>
 #include <numbers>
+#include <map>
 
 namespace cd {
 using Microsoft::WRL::ComPtr;
@@ -47,6 +50,7 @@ struct Control {
     std::shared_ptr<const GpuScene> scene;
     RectI scenePane{};PreviewPaper scenePaper{};
     GhostBond ghost{};uint64_t ghostRevision{};
+    std::shared_ptr<const ReactionPreview> reaction;uint64_t reactionRevision{};
     std::shared_ptr<const AlignmentFeedback> alignment;uint64_t alignmentRevision{};
     HoverHighlight highlight{},endpointHighlight{};uint64_t highlightRevision{},feedbackReset{};
     bool placementHighlight{};
@@ -221,6 +225,8 @@ struct Renderer {
     uint64_t presentedImageSerial{},placementImageSerial{};
     std::shared_ptr<const GpuScene> presentedScene;
     ComPtr<ID2D1SolidColorBrush> paperBrush,borderBrush,ghostBrush,placementBrush;
+    ComPtr<IDWriteFactory> textFactory;
+    std::map<std::wstring,ComPtr<IDWriteTextFormat>> reactionFonts;
     PreviewPaper paper{};
     SceneRenderer scenes;
     RectI pane{};bool nativeFrame{},contentChanged{};
@@ -404,7 +410,8 @@ struct Renderer {
         contentChanged=true;scenes.prune();
         return newChain;
     }
-    void draw(Transform view,const AnimatedFeedback& feedback,double now,const AlignmentFeedback* alignment) {
+    void draw(Transform view,const AnimatedFeedback& feedback,double now,const AlignmentFeedback* alignment,
+        const ReactionPreview* reaction) {
         ComPtr<ID2D1Bitmap1> placementBase;
         if(feedback.allowed&&feedback.ghostPhase==GhostPhase::Held&&feedback.placementBase&&
             placementImageSerial==feedback.placementBase->serial) placementBase=placementImage;
@@ -557,14 +564,42 @@ struct Renderer {
             }
             context->SetAntialiasMode(before);
         }
-        if(alignment&&nativeFrame&&std::abs(sx-1)<1e-5&&std::abs(sy-1)<1e-5) {
+        if(reaction&&paper.sourceUnits>0) {
+            // Independent product layer: never baked into the page, tool ghost,
+            // tracking buffer, hover cache or fixed UI. Reproject every frame.
+            auto project=[&](Point p) {
+                const auto ink=previewInkPoint(paper,p);
+                return D2D1::Point2F(float(view.x+ink.x*sx),float(view.y+ink.y*sy));
+            };
+            placementBrush->SetColor(D2D1::ColorF(0x386ba8,.55f));placementBrush->SetOpacity(1);
+            for(const auto& stroke:reaction->artwork.strokes)
+                context->DrawLine(project(stroke.start),project(stroke.end),placementBrush.Get(),float(stroke.width/paper.sourceUnits*sx));
+            if(!textFactory)require(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,__uuidof(IDWriteFactory),
+                reinterpret_cast<IUnknown**>(textFactory.GetAddressOf())),"reaction preview text");
+            for(const auto& label:reaction->labels) {
+                auto& format=reactionFonts[label.font];
+                if(!format)require(textFactory->CreateTextFormat(label.font.c_str(),nullptr,DWRITE_FONT_WEIGHT_NORMAL,
+                    DWRITE_FONT_STYLE_NORMAL,DWRITE_FONT_STRETCH_NORMAL,1,L"en-us",format.GetAddressOf()),"reaction label font");
+                const auto p=project(label.position);const float size=float(label.size/paper.sourceUnits*sx);
+                if(size<=0||size>2048)continue;
+                context->SetTransform(D2D1::Matrix3x2F::Scale(size,size)*D2D1::Matrix3x2F::Translation(p.x,p.y-size*.9f));
+                const auto box=D2D1::RectF(0,0,200,2);
+                context->DrawText(label.text.c_str(),UINT32(label.text.size()),format.Get(),box,placementBrush.Get(),D2D1_DRAW_TEXT_OPTIONS_NONE);
+            }
+            context->SetTransform(D2D1::Matrix3x2F::Identity());
+        }
+        if(alignment&&(alignment->documentSpace||(nativeFrame&&std::abs(sx-1)<1e-5&&std::abs(sy-1)<1e-5))) {
             const auto before=context->GetAntialiasMode();
             context->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
             placementBrush->SetColor(D2D1::ColorF(0xcf3849,0.92f));placementBrush->SetOpacity(1);
             const float dip=alignment->dip,stroke=std::max(1.0f,dip);
             for(const auto& line:alignment->strokes) {
-                const auto a=D2D1::Point2F(line.start.x-float(pane.l),line.start.y-float(pane.t));
-                const auto b=D2D1::Point2F(line.end.x-float(pane.l),line.end.y-float(pane.t));
+                auto projectGuide=[&](ScenePoint point) {
+                    if(!alignment->documentSpace)return D2D1::Point2F(point.x-float(pane.l),point.y-float(pane.t));
+                    const auto ink=previewInkPoint(paper,{point.x,point.y,0});
+                    return D2D1::Point2F(float(view.x+ink.x*sx),float(view.y+ink.y*sy));
+                };
+                const auto a=projectGuide(line.start),b=projectGuide(line.end);
                 const float dx=b.x-a.x,dy=b.y-a.y,length=std::hypot(dx,dy);
                 if(length<.5f)continue;
                 const float ux=dx/length,uy=dy/length;
@@ -675,7 +710,7 @@ struct GpuPreview::Impl {
             if(!control.visible||!control.snapshot||control.snapshot->serial!=serial||
                 control.targetRevision!=revision||control.feedbackReset!=request.feedbackReset||
                 control.placementRevision!=request.placementRevision||
-                control.alignmentRevision!=request.alignmentRevision) return Submission::Stale;
+                control.alignmentRevision!=request.alignmentRevision||control.reactionRevision!=request.reactionRevision) return Submission::Stale;
         }
         const auto result=renderer.swap->Present(1,DXGI_PRESENT_DO_NOT_WAIT);
         if(result==DXGI_ERROR_WAS_STILL_DRAWING) return Submission::Busy;
@@ -862,7 +897,9 @@ struct GpuPreview::Impl {
                 if(request.anchoredZoom)
                     next=constrainPreview(next,request.snapshot->paper,renderer.width,renderer.height);
                 feedback.update(request,now);
-                const auto drawStarted=displayTicks();renderer.draw(next,feedback,now,request.alignment.get());
+                const auto drawStarted=displayTicks();renderer.draw(next,feedback,now,request.alignment?
+                    request.alignment.get():request.ghost.visible?request.ghost.alignment.get():nullptr,
+                    request.scenesHeld?nullptr:request.reaction.get());
                 recordGpuWork(request,displayTicks()-drawStarted,true);
                 const auto submission=submit(renderer,serial,request);
                 if(submission==Submission::Stale) { discarded(request);dirty=true;continue; }
@@ -1063,13 +1100,18 @@ void GpuPreview::ghost(const GhostBond& next) noexcept {
         if(old.visible==next.visible&&(!next.visible||
             (old.start.x==next.start.x&&old.start.y==next.start.y&&old.end.x==next.end.x&&
              old.end.y==next.end.y&&old.width==next.width&&old.identity==next.identity&&
-             old.toolKey==next.toolKey&&old.placement==next.placement&&old.artwork==next.artwork&&
+             old.toolKey==next.toolKey&&old.placement==next.placement&&old.artwork==next.artwork&&old.alignment==next.alignment&&
              old.cursorAnchored==next.cursorAnchored&&old.cursorAnchor.x==next.cursorAnchor.x&&
              old.cursorAnchor.y==next.cursorAnchor.y&&
              old.ink==next.ink&&
              old.pressPoint.x==next.pressPoint.x&&old.pressPoint.y==next.pressPoint.y))) return;
         c.ghost=next;++c.ghostRevision;
     }
+    SetEvent(impl->changed.value);
+}
+void GpuPreview::reactionSuggestion(std::shared_ptr<const ReactionPreview> next) noexcept {
+    {std::lock_guard guard(impl->mutex);auto& c=impl->control;if(c.reaction==next)return;
+        c.reaction=std::move(next);++c.reactionRevision;}
     SetEvent(impl->changed.value);
 }
 bool GpuPreview::displayedGhost(GhostBond& next) const noexcept {

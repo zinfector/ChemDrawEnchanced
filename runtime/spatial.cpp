@@ -3,6 +3,7 @@
 #include "curved-arrow.hpp"
 #include "arrow-path.hpp"
 #include "smart-align.hpp"
+#include "reaction-suggestion.hpp"
 
 namespace cd {
 struct Node { Node* left; Node* parent; Node* right; uint8_t color,nil; uint8_t pad[6]; Obj object; };
@@ -413,11 +414,13 @@ void forgetPage(Obj page) { forgetArrowPage(page);indices.erase(page);geometryEp
     // Native drag drawing invalidates bounds caches, including stationary ink.
     // The modal drag owns geometry; cache housekeeping cannot retire its guides.
     if(arrowPathTransient(o)) {oldInvalidate(o);return;}
+    if(onUI()&&at<uintptr_t>(o,0)==base+0x8b2cf0)reactionObjectChanged(o);
     smartAlignmentGeometryInvalidated(o);
     markDirty(o);bumpGeneration();oldInvalidate(o);arrowPathInvalidated(o);markDirty(o);
 }
 static void invalidateLast(Obj p) { bumpGeneration(); oldLastFound(p); }
   static void destroyPage(Obj p) {
+    if(onUI())forgetReactionPage(p);
     smartAlignmentPageGone(p);
     if(onUI()) { forgetPlacementPage(p);clearBondPlacement(nullptr);forgetPage(p); }
     else { geometryEpoch.fetch_add(1,std::memory_order_relaxed);bumpGeneration(); }
@@ -432,6 +435,7 @@ static void eraseItem(Index& index,Obj object) {
   static void destroyObject(Obj o) {
     smartAlignmentObjectChanged(o);
     if(arrowPathTransient(o)) {oldObjectDestroy(o);return;}
+    if(onUI())reactionPageChanged(at<Obj>(o,0x60));
     if(onUI()) forgetArrowPathObject(o);
     clearBondPlacement(nullptr);bumpGeneration();
     if(onUI()&&!building) {
@@ -448,6 +452,7 @@ static void eraseItem(Index& index,Obj object) {
 static void addObject(Obj page,Obj object,int id) {
     const auto before=at<size_t>(page,0xd0);oldAddObject(page,object,id);
     smartAlignmentGeometryInvalidated(object);
+    reactionPageChanged(page);
     if(!onUI()||building) { geometryEpoch.fetch_add(1,std::memory_order_relaxed);return; }
     auto found=indices.find(page);if(found==indices.end()) return;
     auto& index=found->second;const auto after=at<size_t>(page,0xd0);
@@ -456,6 +461,7 @@ static void addObject(Obj page,Obj object,int id) {
     catch(const std::bad_alloc&) { indices.erase(found); }
 }
   static void removeObject(Obj page,Obj object) {
+    reactionPageChanged(page);
     smartAlignmentObjectChanged(object);
     // Retain the native object's lifetime and callbacks. Membership is updated
     // only after the native removal has completed; reentrant queries can rebuild.
@@ -486,7 +492,8 @@ void installSpatial() {
     hook(0x2b91d0,drawAtomHighlight,oldAtomDrawHighlight);
     hook(0x2bfc30,hotKeyBounds,oldHotKeyBounds);
     hook(0x2c4860,invalidateAtomHighlight,oldAtomHighlightInvalidation);
-    if (patchEnabled(2)) { hook(0x711500,findIndexed,oldFind); hook(0x7107c0,findAtomIndexed,oldFindAtom); }
+    if (patchEnabled(2)) hook(0x711500,findIndexed,oldFind);
+    if (patchEnabled(2)) hook(0x7107c0,findAtomIndexed,oldFindAtom);
     hook(0x328a90,invalidateObject,oldInvalidate);
     hook(0x715aa0,invalidateLast,oldLastFound);
     hook(0x70adc0,destroyPage,oldPageDestroy);

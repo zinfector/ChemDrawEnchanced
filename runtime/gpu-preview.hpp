@@ -27,6 +27,8 @@ struct PlacementDisplayTiming {
 struct GhostStroke { Point start{},end{};double width{}; };
 struct GhostPath { std::vector<Point> points;std::vector<BYTE> types;double width{};bool filled{}; };
 struct GhostArtwork { std::vector<GhostStroke> strokes;std::vector<GhostPath> paths; };
+struct AlignmentFeedback;
+struct ReactionPreview;
 struct GhostBond {
     Point start{},end{}; // Document coordinates; never a native object pointer.
     Point pressPoint{}; // Hover position for validating a blank-paper press.
@@ -38,6 +40,8 @@ struct GhostBond {
     bool placement{}; // Only vertex bond extrusion participates in click handoff.
     POINT cursorAnchor{};bool cursorAnchored{}; // Client pixels; free preview follows the cursor during navigation.
     std::shared_ptr<const GhostArtwork> artwork;
+    Point alignmentOffset{};
+    std::shared_ptr<const AlignmentFeedback> alignment;
 };
 struct GhostTool {
     int tool{},subtype{},order{},type{},chainAtoms{},ringCode{};
@@ -62,6 +66,7 @@ struct AlignmentStroke { ScenePoint start{},end{};bool arrows{}; };
 struct AlignmentFeedback {
     std::vector<AlignmentStroke> strokes;
     float dip{1};
+    bool documentSpace{};
 };
 inline PreviewView anchorPreview(PreviewView shown,double cursorX,double cursorY,double width,double height) {
     return {cursorX-(cursorX-shown.x)*width/shown.w,
@@ -129,6 +134,7 @@ public:
     bool hasFixedUi(RectI pane,RectI client) const noexcept;
     bool nativeScenePresented() const noexcept;
     void ghost(const GhostBond&) noexcept;
+    void reactionSuggestion(std::shared_ptr<const ReactionPreview>) noexcept;
     bool displayedGhost(GhostBond&) const noexcept;
     bool beginGhostPlacement(const GhostBond&) noexcept;
     void armPlacementRelease(uint64_t,POINT,int,int) noexcept;

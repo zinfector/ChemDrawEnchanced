@@ -5,7 +5,7 @@
 #include <thread>
 #include <atomic>
 static HWND window,folderBox,listBox,descriptionBox,logBox,applyButton,removeButton,inspectButton,recoverButton;
-static HFONT font;static std::atomic<bool> busy=false;static bool changing=false;static uint32_t chosen=allFeatures&~(1u<<12);
+static HFONT font;static std::atomic<bool> busy=false;static bool changing=false;static uint32_t chosen=allFeatures&~((1u<<12)|(1u<<19));
 static constexpr UINT doneMessage=WM_APP+1;
 struct Result {std::wstring text;bool failed{};bool inspected{};bool compatible{};uint32_t mask{};};
 static std::wstring controlText(HWND w){int n=GetWindowTextLengthW(w);std::wstring s(n+1,0);GetWindowTextW(w,s.data(),n+1);s.resize(n);return s;}
@@ -28,7 +28,7 @@ static void layout(){RECT r;GetClientRect(window,&r);int width=r.right,height=r.
  int y=listHeight+180;MoveWindow(inspectButton,20,y,115,32,TRUE);MoveWindow(applyButton,145,y,155,32,TRUE);MoveWindow(removeButton,310,y,130,32,TRUE);MoveWindow(recoverButton,450,y,120,32,TRUE);MoveWindow(GetDlgItem(window,9),580,y,100,32,TRUE);MoveWindow(GetDlgItem(window,10),690,y,105,32,TRUE);MoveWindow(logBox,20,y+46,width-40,std::max(40,height-y-62),TRUE);}
 static void browse(){IFileDialog* dialog=nullptr;if(FAILED(CoCreateInstance(CLSID_FileOpenDialog,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&dialog))))return;DWORD opts{};dialog->GetOptions(&opts);dialog->SetOptions(opts|FOS_PICKFOLDERS|FOS_FORCEFILESYSTEM);dialog->SetTitle(L"Select the folder containing ChemDraw.exe");if(SUCCEEDED(dialog->Show(window))){IShellItem* item=nullptr;if(SUCCEEDED(dialog->GetResult(&item))){PWSTR path=nullptr;if(SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH,&path))){SetWindowTextW(folderBox,path);CoTaskMemFree(path);}item->Release();}}dialog->Release();}
 static LRESULT CALLBACK procedure(HWND w,UINT msg,WPARAM a,LPARAM b){switch(msg){case WM_CREATE:{window=w;LOGFONTW lf{};lf.lfHeight=-16;wcscpy_s(lf.lfFaceName,L"Segoe UI");font=CreateFontIndirectW(&lf);
- make(L"STATIC",L"ChemDraw Patch Manager  •  Native C++",0,20);make(L"STATIC",L"Save documents and close ChemDraw. Checked features will load on the next launch.",0,21);
+ make(L"STATIC",L"ChemDraw Patch Manager  â€¢  Native C++  |  r107",0,20);make(L"STATIC",L"Save documents and close ChemDraw. Checked features will load on the next launch.",0,21);
  folderBox=make(L"EDIT",L"C:\\Program Files\\RevvitySignalsSoftware\\ChemDrawApplications_x64",WS_BORDER|ES_AUTOHSCROLL,1);make(L"BUTTON",L"Browse...",BS_PUSHBUTTON,2);
  listBox=make(WC_LISTVIEWW,L"",WS_BORDER|LVS_REPORT|LVS_SHOWSELALWAYS|LVS_SINGLESEL,3);ListView_SetExtendedListViewStyle(listBox,LVS_EX_CHECKBOXES|LVS_EX_FULLROWSELECT|LVS_EX_DOUBLEBUFFER);LVCOLUMNW col{};col.mask=LVCF_TEXT|LVCF_WIDTH;col.pszText=const_cast<wchar_t*>(L"Patch toggle (shared dependencies enabled automatically)");col.cx=780;ListView_InsertColumn(listBox,0,&col);
  changing=true;for(size_t i=0;i<features.size();++i){LVITEMW item{};item.mask=LVIF_TEXT;item.iItem=int(i);item.pszText=const_cast<wchar_t*>(features[i].name);ListView_InsertItem(listBox,&item);}updateChecks();

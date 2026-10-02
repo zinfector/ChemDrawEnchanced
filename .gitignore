@@ -1,5 +1,6 @@
 # Local build products and runtime payload intermediates
 /build/
+/build-*.log
 /runtime/build/
 /runtime/bin/
 *.obj

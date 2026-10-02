@@ -20,12 +20,12 @@ foreach(SHADER gradient image-effect raster-op)
             "${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}.hlsl"
         DEPENDS "${SHADER}.hlsl" VERBATIM)
 endforeach()
-add_library(ChemDrawLatency SHARED runtime.cpp version-resolver.cpp gpu-ui.cpp toolbar-paint.cpp curved-arrow.cpp arrow-path.cpp smart-align.cpp placement-runtime.cpp chemistry-worker.cpp presentation.cpp undo-camera.cpp history-trace.cpp bond-placement.cpp ghost-tools.cpp gpu-preview.cpp gpu-canvas.cpp gpu-scene-renderer.cpp gpu-effects.cpp gpu-materialize.cpp gpu-metafile.cpp spatial.cpp buffers.cpp
+add_library(ChemDrawLatency SHARED reaction-suggestion.cpp startup.cpp runtime.cpp version-resolver.cpp gpu-ui.cpp toolbar-paint.cpp curved-arrow.cpp arrow-path.cpp smart-align.cpp placement-runtime.cpp chemistry-worker.cpp presentation.cpp undo-camera.cpp history-trace.cpp bond-placement.cpp ghost-tools.cpp gpu-preview.cpp gpu-canvas.cpp gpu-scene-renderer.cpp gpu-effects.cpp gpu-materialize.cpp gpu-metafile.cpp spatial.cpp buffers.cpp
     "${CMAKE_CURRENT_BINARY_DIR}/gradient-shader.hpp" "${CMAKE_CURRENT_BINARY_DIR}/image-effect-shader.hpp" "${CMAKE_CURRENT_BINARY_DIR}/raster-op-shader.hpp")
 target_include_directories(ChemDrawLatency PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_compile_definitions(ChemDrawLatency PRIVATE GDIPVER=0x0110)
 target_compile_definitions(ChemDrawLatency PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
 target_compile_options(ChemDrawLatency PRIVATE /W4 /EHsc /O2)
-target_link_options(ChemDrawLatency PRIVATE "/MAP:${CMAKE_CURRENT_BINARY_DIR}/ChemDrawLatency.map")
-target_link_libraries(ChemDrawLatency PRIVATE minhook user32 gdi32 gdiplus d3d11 d2d1 dxgi dxguid dcomp ole32 bcrypt comctl32 advapi32)
+target_link_options(ChemDrawLatency PRIVATE "/MAP:${CMAKE_CURRENT_BINARY_DIR}/ChemDrawLatency.map" /DELAYLOAD:d3d11.dll /DELAYLOAD:d2d1.dll /DELAYLOAD:dcomp.dll /DELAYLOAD:dwrite.dll)
+target_link_libraries(ChemDrawLatency PRIVATE minhook user32 gdi32 gdiplus d3d11 d2d1 dwrite dxgi dxguid dcomp ole32 xmllite bcrypt comctl32 advapi32 delayimp)
 set_target_properties(ChemDrawLatency PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")

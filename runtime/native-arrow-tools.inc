@@ -76,6 +76,8 @@ Obj undoDestructor(Obj command,unsigned flags) {
     return oldUndoDestructor(command,flags);
 }
 Obj* regularFactory(Obj* result,Obj page,Point* point,Obj existing,uint8_t adjust) {
+    Point aligned{};
+    if(!existing&&!adjust&&point&&smartAlignmentPlacementPoint(page,*point,aligned))point=&aligned;
     if(!onUI()||!enabled||!point) return oldRegularFactory(result,page,point,existing,adjust);
     Query press{page,existing};
     if(!adjust&&!existing) {
@@ -146,12 +148,14 @@ void regularTarget(const Point& point) {
     regular.moving=linkedAnchor(target,point);
 }
 void regularMove(Obj tracker) {
+    smartAlignmentDrawingMove(tracker);
     if(!onUI()||!enabled||regular.tracker!=tracker) {oldRegularMove(tracker);return;}
     RectD previous{};vf<RectD*(*)(Obj,RectD*)>(regular.arrow,0x1c8)(regular.arrow,&previous);
     regularTarget(at<Point>(tracker,0x50));
     if(regular.incumbent>=0) at<Point>(tracker,0x50)=regular.moving;
     at<Point>(tracker,0x148)=regular.fixed;
     regular.running=true;oldRegularMove(tracker);regular.running=false;
+    if(at<int>(regular.arrow,regular.tail?0x1f4:0x1f0)<0)regular.fixed=at<Point>(tracker,0x148);
     updateArrowTargetHighlight(at<Obj>(regular.page,8),byID(regular.page,regular.incumbent));
     // Damage covers the original and intermediate shafts; GPU owner filtering
     // retains only the current native tracker preview.
@@ -181,6 +185,14 @@ short regularFinish(Obj tracker) {
             insetArrowEndpoints(arrow,tail,head,regular.angle);
             fn<Align>(0x2a8260)(arrow,&head,&tail);
             regular.running=false;
+        }
+    }
+    if(!cancelled&&!regular.existing) {
+        Point tail{},head{};
+        if(smartAlignmentGhostArrowEndpoints(regular.page,tail,head)) {
+            UndoDisabled off(arrow);
+            if(!setMirroredArrowEndpoints(arrow,&head,&tail))oldEndpoints(arrow,&head,&tail);
+            at<Point>(tracker,0x50)=regular.tail?tail:head;
         }
     }
     regular={};
