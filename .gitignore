@@ -1,0 +1,32 @@
+# Local build products and runtime payload intermediates
+/build/
+/runtime/build/
+/runtime/bin/
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.tlog
+*.user
+*.suo
+.vs/
+__pycache__/
+
+# Local analysis exports and machine-specific reports
+/inspection.txt
+/verification.txt
+/ghidra/*.log
+/ghidra/*.targets.tsv
+*.gpr
+*.rep/
+
+# Installer state belongs only in a user's application installation
+*.before-latency-fix
+ChemDrawLatency.ini
+ChemDrawLatency.native-state
+.ChemDrawNativeBackup*/
+.ChemDrawNativeTransaction/
+
+# Keep the documented distributable files in release/ and the root ZIP
+/release/Release/

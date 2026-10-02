@@ -1,0 +1,31 @@
+cmake_minimum_required(VERSION 3.24)
+project(ChemDrawLatency LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+add_subdirectory(vendor/minhook EXCLUDE_FROM_ALL)
+set(SDK_ROOT "C:/Program Files (x86)/Windows Kits/10")
+set(SDK_VERSION "${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
+find_program(FXC fxc PATHS "${SDK_ROOT}/bin/${SDK_VERSION}/x64" REQUIRED NO_DEFAULT_PATH)
+foreach(SHADER gradient image-effect raster-op)
+    if(SHADER STREQUAL "gradient")
+        set(SHADER_SYMBOL gradientShader)
+    elseif(SHADER STREQUAL "image-effect")
+        set(SHADER_SYMBOL imageEffectShader)
+    else()
+        set(SHADER_SYMBOL rasterOpShader)
+    endif()
+    add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${SHADER}-shader.hpp"
+        COMMAND "${FXC}" /nologo /T ps_4_0 /E main /D D2D_ENTRY=main /D D2D_FULL_SHADER /O3 /I "${SDK_ROOT}/Include/${SDK_VERSION}/um"
+            /Fh "${CMAKE_CURRENT_BINARY_DIR}/${SHADER}-shader.hpp" /Vn "${SHADER_SYMBOL}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}.hlsl"
+        DEPENDS "${SHADER}.hlsl" VERBATIM)
+endforeach()
+add_library(ChemDrawLatency SHARED runtime.cpp version-resolver.cpp gpu-ui.cpp toolbar-paint.cpp curved-arrow.cpp arrow-path.cpp smart-align.cpp placement-runtime.cpp chemistry-worker.cpp presentation.cpp undo-camera.cpp history-trace.cpp bond-placement.cpp ghost-tools.cpp gpu-preview.cpp gpu-canvas.cpp gpu-scene-renderer.cpp gpu-effects.cpp gpu-materialize.cpp gpu-metafile.cpp spatial.cpp buffers.cpp
+    "${CMAKE_CURRENT_BINARY_DIR}/gradient-shader.hpp" "${CMAKE_CURRENT_BINARY_DIR}/image-effect-shader.hpp" "${CMAKE_CURRENT_BINARY_DIR}/raster-op-shader.hpp")
+target_include_directories(ChemDrawLatency PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_compile_definitions(ChemDrawLatency PRIVATE GDIPVER=0x0110)
+target_compile_definitions(ChemDrawLatency PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_compile_options(ChemDrawLatency PRIVATE /W4 /EHsc /O2)
+target_link_options(ChemDrawLatency PRIVATE "/MAP:${CMAKE_CURRENT_BINARY_DIR}/ChemDrawLatency.map")
+target_link_libraries(ChemDrawLatency PRIVATE minhook user32 gdi32 gdiplus d3d11 d2d1 dxgi dxguid dcomp ole32 bcrypt comctl32 advapi32)
+set_target_properties(ChemDrawLatency PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")

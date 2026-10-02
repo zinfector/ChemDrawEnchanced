@@ -1,0 +1,1055 @@
+[
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0xa5ba0",
+    "function": "SetPoints",
+    "prototype": "void SetPoints(CDSpline * this, vector<cs::PointTemplate3D<double>,std::allocator<cs::PointTemplate3D<double>_>_> * param_1)",
+    "source": "native-arrow-editing.inc",
+    "length": 84,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0xf2240",
+    "function": "CanUngroup",
+    "prototype": "bool CanUngroup(CDGroup * this)",
+    "source": "native-arrow-editing.inc",
+    "length": 11,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x109fa0",
+    "function": "GetChemistryHash",
+    "prototype": "uint GetChemistryHash(MoleculeAnalyzer * this)",
+    "source": "placement-runtime.cpp",
+    "length": 176,
+    "context_anchor": 48
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x12dbc0",
+    "function": "FUN_18012dbc0",
+    "prototype": "undefined FUN_18012dbc0()",
+    "source": "buffers.cpp",
+    "length": 176,
+    "context_anchor": 48
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x14a6d0",
+    "function": "DoZoom",
+    "prototype": "void DoZoom(DocumentBase * this, PointTemplate3D<double> * param_1, double param_2, bool param_3)",
+    "source": "presentation.cpp",
+    "length": 54,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x14a710",
+    "function": "DoZoomWithoutCenter",
+    "prototype": "void DoZoomWithoutCenter(DocumentBase * this, double param_1, bool param_2)",
+    "source": "undo-camera.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x1523e0",
+    "function": "NeedToValidateObjects",
+    "prototype": "void NeedToValidateObjects(DocumentBase * this)",
+    "source": "spatial.cpp",
+    "length": 8,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x152ad0",
+    "function": "PerformRedo",
+    "prototype": "short PerformRedo(DocumentBase * this)",
+    "source": "undo-camera.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x152c50",
+    "function": "PerformUndo",
+    "prototype": "short PerformUndo(DocumentBase * this)",
+    "source": "undo-camera.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x16b660",
+    "function": "ConstrainedPoint",
+    "prototype": "PointTemplate3D<double> ConstrainedPoint(DragTrackingHandler * this)",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x16bb50",
+    "function": "DoDragLasso",
+    "prototype": "void DoDragLasso(DragTrackingHandler * this)",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x16ca20",
+    "function": "FinishDragLasso",
+    "prototype": "void FinishDragLasso(DragTrackingHandler * this, bool param_1, bool param_2)",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x16ff00",
+    "function": "ClipAndHighlightPrimitives",
+    "prototype": "void ClipAndHighlightPrimitives(DrawingCanvasPort * this, vector<GraphicPrimitive,std::allocator<GraphicPrimitive>_> * param_1, RectTemplate<int> * param_2, bool param_3)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x19d090",
+    "function": "DrawHighlightedObjectHighlights",
+    "prototype": "void DrawHighlightedObjectHighlights(HighlightState * this)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x19d130",
+    "function": "DrawHotKeyObjectHighlight",
+    "prototype": "void DrawHotKeyObjectHighlight(HighlightState * this)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x253d20",
+    "function": "GetAnalyzer",
+    "prototype": "MoleculeAnalyzer * GetAnalyzer(CdSelection * this)",
+    "source": "placement-runtime.cpp",
+    "length": 123,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x25ffd0",
+    "function": "RegenerateMoleculeAnalyzer",
+    "prototype": "void RegenerateMoleculeAnalyzer(CdSelection * this, unique_ptr<MoleculeAnalyzer,std::default_delete<MoleculeAnalyzer>_> * param_1, bool param_2)",
+    "source": "placement-runtime.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x260af0",
+    "function": "ValidateSomeObjects",
+    "prototype": "int ValidateSomeObjects(CdSelection * this, long param_1, bool param_2)",
+    "source": "placement-runtime.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x295af0",
+    "function": "FUN_180295af0",
+    "prototype": "undefined FUN_180295af0()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2961f0",
+    "function": "FUN_1802961f0",
+    "prototype": "undefined FUN_1802961f0()",
+    "source": "curved-arrow.cpp",
+    "length": 62,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x296490",
+    "function": "AlignWithTarget",
+    "prototype": "void AlignWithTarget(CDArrow * this, PointTemplate3D<double> * param_1, PointTemplate3D<double> * param_2)",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x29cab0",
+    "function": "DrawGraphic",
+    "prototype": "void DrawGraphic(CDArrow * this, CwPortBase * param_1)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x29e970",
+    "function": "Flip",
+    "prototype": "void Flip(CDArrow * this, FlipType param_1, PointTemplate3D<double> * param_2, bool param_3)",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x29ed20",
+    "function": "GetAdjustmentPoints",
+    "prototype": "void GetAdjustmentPoints(CDArrow * this, bool param_1, bool param_2, vector<cs::PointTemplate3D<double>,std::allocator<cs::PointTemplate3D<double>_>_> * param_3)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2a2580",
+    "function": "GetOwnBounds",
+    "prototype": "RectTemplate<double> GetOwnBounds(CDArrow * this)",
+    "source": "native-arrow-editing.inc",
+    "length": 82,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2a2c00",
+    "function": "GetSubObjectHit",
+    "prototype": "int GetSubObjectHit(CDArrow * this, PointTemplate3D<double> * param_1)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2a5a90",
+    "function": "Near",
+    "prototype": "bool Near(CDArrow * this, PointTemplate3D<double> * param_1)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2a6680",
+    "function": "FUN_1802a6680",
+    "prototype": "undefined FUN_1802a6680()",
+    "source": "curved-arrow.cpp",
+    "length": 87,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2a6c00",
+    "function": "SetArcAngle",
+    "prototype": "void SetArcAngle(CDArrow * this, double param_1)",
+    "source": "curved-arrow.cpp",
+    "length": 122,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2a7bc0",
+    "function": "SetStartAndEnd",
+    "prototype": "void SetStartAndEnd(CDArrow * this, PointTemplate3D<double> * param_1, PointTemplate3D<double> * param_2)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2a8260",
+    "function": "SetStartAndTail",
+    "prototype": "void SetStartAndTail(CDArrow * this, PointTemplate3D<double> * param_1, PointTemplate3D<double> * param_2)",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2a8480",
+    "function": "SnapWhenDragging",
+    "prototype": "PointTemplate3D<double> SnapWhenDragging(CDArrow * this, PointTemplate3D<double> * param_1)",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2a9190",
+    "function": "Validate",
+    "prototype": "void Validate(CDArrow * this)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2b91d0",
+    "function": "DrawHighlight",
+    "prototype": "void DrawHighlight(CDAtom * this, CwPortBase * param_1)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2b9380",
+    "function": "DrawHotKeyFeedback",
+    "prototype": "void DrawHotKeyFeedback(CDAtom * this, ObjectHighlighterBase * param_1)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2bfc30",
+    "function": "GetHotKeyBounds",
+    "prototype": "RectTemplate<double> GetHotKeyBounds(CDAtom * this)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2c39d0",
+    "function": "HighlightObject",
+    "prototype": "void HighlightObject(CDAtom * this, ObjectHighlighterBase * param_1)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2c3b60",
+    "function": "Hilite",
+    "prototype": "void Hilite(CDAtom * this, ObjectHighlighterBase * param_1, int param_2)",
+    "source": "spatial.cpp",
+    "length": 10,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2c4860",
+    "function": "InvalidateHighlightingSelf",
+    "prototype": "void InvalidateHighlightingSelf(CDAtom * this)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2c9550",
+    "function": "Near",
+    "prototype": "bool Near(CDAtom * this, PointTemplate3D<double> * param_1)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2ea7e0",
+    "function": "DrawGraphic",
+    "prototype": "void DrawGraphic(CDBond * this, CwPortBase * param_1)",
+    "source": "buffers.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2eef50",
+    "function": "HighlightObject",
+    "prototype": "void HighlightObject(CDBond * this, ObjectHighlighterBase * param_1)",
+    "source": "spatial.cpp",
+    "length": 90,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2efce0",
+    "function": "Near",
+    "prototype": "bool Near(CDBond * this, PointTemplate3D<double> * param_1)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x320440",
+    "function": "SnapWhenDragging",
+    "prototype": "PointTemplate3D<double> SnapWhenDragging(CDGraphic * this, PointTemplate3D<double> * param_1)",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x324920",
+    "function": "~CDObject",
+    "prototype": "void ~CDObject(CDObject * this)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x325bc0",
+    "function": "ChemistryChanged",
+    "prototype": "void ChemistryChanged(CDObject * this)",
+    "source": "placement-runtime.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x325cd0",
+    "function": "Delete",
+    "prototype": "void Delete(CDObject * this)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x326140",
+    "function": "DrawAdjustmentPoints",
+    "prototype": "bool DrawAdjustmentPoints(CDObject * this, ObjectHighlighterBase * param_1, bool param_2, bool param_3)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x327890",
+    "function": "GetInternTolerance",
+    "prototype": "double GetInternTolerance(CDObject * this)",
+    "source": "spatial.cpp",
+    "length": 41,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x328a90",
+    "function": "Invalidate",
+    "prototype": "void Invalidate(CDObject * this)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x346e40",
+    "function": "DrawGraphic",
+    "prototype": "void DrawGraphic(CDSpline * this, CwPortBase * param_1)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x34c4e0",
+    "function": "Validate",
+    "prototype": "void Validate(CDSpline * this)",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x419560",
+    "function": "DrawLasso",
+    "prototype": "void DrawLasso(Page * param_1, CwPortBase * param_2)",
+    "source": "buffers.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x461460",
+    "function": "FUN_180461460",
+    "prototype": "undefined FUN_180461460()",
+    "source": "undo-camera.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x4d3b80",
+    "function": "CalculateCIPStereochemistry",
+    "prototype": "void CalculateCIPStereochemistry(StereoCIP * this, CDObjectSet<CDObject> * param_1)",
+    "source": "placement-runtime.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x4fbd20",
+    "function": "FUN_1804fbd20",
+    "prototype": "undefined FUN_1804fbd20()",
+    "source": "bond-placement.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x503100",
+    "function": "PushRedoStack",
+    "prototype": "void PushRedoStack(DocumentBase * this)",
+    "source": "undo-camera.cpp",
+    "length": 56,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x503140",
+    "function": "PushUndoStack",
+    "prototype": "void PushUndoStack(DocumentBase * this)",
+    "source": "undo-camera.cpp",
+    "length": 61,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x503180",
+    "function": "RedoEnabled",
+    "prototype": "bool RedoEnabled(DocumentBase * this)",
+    "source": "undo-camera.cpp",
+    "length": 21,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x503410",
+    "function": "StartNewUndo",
+    "prototype": "void StartNewUndo(DocumentBase * this)",
+    "source": "history-trace.cpp",
+    "length": 108,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x503480",
+    "function": "UndoByObject",
+    "prototype": "void UndoByObject(DocumentBase * this, UndoCommand * param_1, bool param_2)",
+    "source": "history-trace.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5035c0",
+    "function": "UndoEnabled",
+    "prototype": "bool UndoEnabled(DocumentBase * this)",
+    "source": "undo-camera.cpp",
+    "length": 26,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x542fb0",
+    "function": "RefreshToolbars",
+    "prototype": "void RefreshToolbars(void)",
+    "source": "toolbar-paint.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x545970",
+    "function": "ToggleShowing",
+    "prototype": "bool ToggleShowing(CwToolBar * this)",
+    "source": "toolbar-paint.cpp",
+    "length": 50,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x59fea0",
+    "function": "Cursor_HideCursor",
+    "prototype": "void Cursor_HideCursor(void)",
+    "source": "buffers.cpp",
+    "length": 9,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5a3de0",
+    "function": "Refresh",
+    "prototype": "void Refresh(CwGridToolBar * this, bool param_1)",
+    "source": "toolbar-paint.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5adc10",
+    "function": "DialogProc",
+    "prototype": "int DialogProc(CwToolBar * this, uint param_1, __uint64 param_2, __int64 param_3)",
+    "source": "toolbar-paint.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5b1f10",
+    "function": "PrepareWindow",
+    "prototype": "void PrepareWindow(CwToolBar * this, int param_1)",
+    "source": "toolbar-paint.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5be6b0",
+    "function": "Mouse_TrackLocationWithTimeout",
+    "prototype": "MouseTrackingResult Mouse_TrackLocationWithTimeout(HWND__ * param_1, int param_2)",
+    "source": "runtime.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5d5500",
+    "function": "Sys_GetTickCount",
+    "prototype": "uint Sys_GetTickCount(void)",
+    "source": "placement-runtime.cpp",
+    "length": 36,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5efcc0",
+    "function": "FUN_1805efcc0",
+    "prototype": "undefined FUN_1805efcc0()",
+    "source": "toolbar-paint.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5f1b90",
+    "function": "FUN_1805f1b90",
+    "prototype": "undefined FUN_1805f1b90()",
+    "source": "toolbar-paint.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5f7c90",
+    "function": "DoScrolling",
+    "prototype": "void DoScrolling(DocumentWin * this, CwPortBase * param_1, int * param_2, int * param_3)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5f84d0",
+    "function": "FUN_1805f84d0",
+    "prototype": "undefined FUN_1805f84d0()",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5f88d0",
+    "function": "DrawContents",
+    "prototype": "void DrawContents(DocumentWin * this, CwPortBase * param_1)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5f92b0",
+    "function": "FUN_1805f92b0",
+    "prototype": "undefined FUN_1805f92b0()",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5fe480",
+    "function": "OnIdle",
+    "prototype": "bool OnIdle(DocumentWin * this)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x5ff4d0",
+    "function": "SetMySize",
+    "prototype": "void SetMySize(DocumentWin * this, int param_1, int param_2)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x600080",
+    "function": "SetScrollBarsVisibility",
+    "prototype": "void SetScrollBarsVisibility(DocumentWin * param_1)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x607950",
+    "function": "FUN_180607950",
+    "prototype": "undefined FUN_180607950()",
+    "source": "buffers.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x623140",
+    "function": "GetGraphics",
+    "prototype": "Graphics * GetGraphics(CwPortWin * this)",
+    "source": "gpu-canvas.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x624ed0",
+    "function": "PaintPolygon",
+    "prototype": "void PaintPolygon(CwPortWin * this, vector<cs::PointTemplate3D<double>,std::allocator<cs::PointTemplate3D<double>_>_> * param_1)",
+    "source": "gpu-canvas.cpp",
+    "length": 176,
+    "context_anchor": 48
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x626c80",
+    "function": "SetClipRect",
+    "prototype": "void SetClipRect(CwPortWin * this, RectTemplate<int> * param_1)",
+    "source": "buffers.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x631730",
+    "function": "DocumentWndProc",
+    "prototype": "__int64 DocumentWndProc(HWND__ * param_1, uint param_2, __uint64 param_3, __int64 param_4)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x6336c0",
+    "function": "FUN_1806336c0",
+    "prototype": "undefined FUN_1806336c0()",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x643bc0",
+    "function": "MagnifyZoomIn",
+    "prototype": "bool MagnifyZoomIn(DocumentWin * param_1, PointTemplate3D<double> * param_2)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x643c60",
+    "function": "MagnifyZoomOut",
+    "prototype": "bool MagnifyZoomOut(DocumentWin * param_1, PointTemplate3D<double> * param_2)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x645a30",
+    "function": "OffscreenValid",
+    "prototype": "bool OffscreenValid(DocumentWin * this)",
+    "source": "presentation.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x696dc0",
+    "function": "FUN_180696dc0",
+    "prototype": "undefined FUN_180696dc0()",
+    "source": "history-trace.cpp",
+    "length": 176,
+    "context_anchor": 48
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x6971d0",
+    "function": "FUN_1806971d0",
+    "prototype": "undefined FUN_1806971d0()",
+    "source": "history-trace.cpp",
+    "length": 176,
+    "context_anchor": 48
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x6d02f0",
+    "function": "CopyBuffer",
+    "prototype": "void CopyBuffer(TrackingHandlerWin * this)",
+    "source": "buffers.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x6d0640",
+    "function": "SPerformTrackingRaw",
+    "prototype": "short SPerformTrackingRaw(TrackingHandlerBase * param_1)",
+    "source": "buffers.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x6d0c90",
+    "function": "UseWorkBuffer",
+    "prototype": "void UseWorkBuffer(TrackingHandlerWin * this, bool param_1)",
+    "source": "buffers.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x6df570",
+    "function": "SDrawItem",
+    "prototype": "bool SDrawItem(tagDRAWITEMSTRUCT * param_1)",
+    "source": "gpu-ui.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x70adc0",
+    "function": "~Page",
+    "prototype": "void ~Page(Page * this)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x70b790",
+    "function": "AddObject",
+    "prototype": "void AddObject(Page * this, CDObject * param_1, int param_2)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x70da50",
+    "function": "DrawObjects",
+    "prototype": "void DrawObjects(Page * this, CwPortBase * param_1, CdSelection * param_2, DrawOptions * param_3)",
+    "source": "buffers.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x70e360",
+    "function": "DrawOffscreen",
+    "prototype": "void DrawOffscreen(Page * this, CdSelection * param_1)",
+    "source": "buffers.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x7107c0",
+    "function": "FindCDAtom",
+    "prototype": "CDAtom * FindCDAtom(Page * this, PointTemplate3D<double> * param_1, CDAtom * param_2)",
+    "source": "spatial.cpp",
+    "length": 176,
+    "context_anchor": 48
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x711500",
+    "function": "FindObject",
+    "prototype": "CDObject * FindObject(Page * this, PointTemplate3D<double> * param_1, CDObject * param_2)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x715a50",
+    "function": "InvalWindow",
+    "prototype": "void InvalWindow(Page * this, RectTemplate<double> * param_1)",
+    "source": "undo-camera.cpp",
+    "length": 76,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x715aa0",
+    "function": "InvalidateLastFound",
+    "prototype": "void InvalidateLastFound(Page * this)",
+    "source": "spatial.cpp",
+    "length": 41,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x7183e0",
+    "function": "ModifiedRect",
+    "prototype": "void ModifiedRect(Page * this, RectTemplate<double> * param_1)",
+    "source": "placement-runtime.cpp",
+    "length": 60,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x718c40",
+    "function": "ProcessSomeChangedChemistry",
+    "prototype": "bool ProcessSomeChangedChemistry(Page * this, bool param_1)",
+    "source": "placement-runtime.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x719db0",
+    "function": "RemoveObject",
+    "prototype": "void RemoveObject(Page * this, CDObject * param_1)",
+    "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x732870",
+    "function": "SFire",
+    "prototype": "bool SFire(ushort param_1, basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t>_> param_2, int param_3, StatusListener * param_4)",
+    "source": "history-trace.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x8469e4",
+    "function": "FUN_1808469e4",
+    "prototype": "undefined FUN_1808469e4()",
+    "source": "buffers.cpp",
+    "length": 59,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25a3c0",
+    "function": "FUN_18025a3c0",
+    "prototype": "undefined FUN_18025a3c0()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25af20",
+    "function": "FUN_18025af20",
+    "prototype": "undefined FUN_18025af20()",
+    "source": "curved-arrow.cpp",
+    "length": 176,
+    "context_anchor": 48
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25b270",
+    "function": "FUN_18025b270",
+    "prototype": "undefined FUN_18025b270()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25b3d0",
+    "function": "FUN_18025b3d0",
+    "prototype": "undefined FUN_18025b3d0()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25cd40",
+    "function": "FUN_18025cd40",
+    "prototype": "undefined FUN_18025cd40()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25d3d0",
+    "function": "FUN_18025d3d0",
+    "prototype": "undefined FUN_18025d3d0()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25dcd0",
+    "function": "FUN_18025dcd0",
+    "prototype": "undefined FUN_18025dcd0()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25e1c0",
+    "function": "FUN_18025e1c0",
+    "prototype": "undefined FUN_18025e1c0()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25edc0",
+    "function": "FUN_18025edc0",
+    "prototype": "undefined FUN_18025edc0()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25f3f0",
+    "function": "FUN_18025f3f0",
+    "prototype": "undefined FUN_18025f3f0()",
+    "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  }
+]
