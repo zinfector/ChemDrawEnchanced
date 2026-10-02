@@ -130,7 +130,9 @@ bool offsetAttachment(Obj arrow,int id) {
     Obj page=at<Obj>(arrow,0x60),object=id>=0&&page?fn<Obj(*)(Obj,int)>(0x712f80)(page,id):nullptr;
     if(!object||!at<uint8_t>(object,0x34)) return false;
     const uintptr_t table=at<uintptr_t>(object,0);
-    return table==base+0x8b34f8||table==base+0x8babc0;
+    Point boundary{};
+    if(table==base+0x89a468&&arrowInsertionAttachment(arrow,id==at<int>(arrow,0x1f0),boundary))return false;
+    return table==base+0x8b34f8||table==base+0x8babc0||table==base+0x89a468;
 }
 double endpointClearance(Obj arrow,Point tail,Point head) {
     Obj page=at<Obj>(arrow,0x60);if(!page) return 0;
@@ -523,7 +525,7 @@ bool editPoint(Obj curve,bool erase) {
     oldSetPoints(curve,&p);setTag(curve,cornersTag,corners);redraw(curve);return true;
 }
 template<class F> void trackerHook(size_t rva,F replacement,F& original) {
-    auto status=MH_CreateHook(reinterpret_cast<void*>(nativeUI+rva),reinterpret_cast<void*>(replacement),reinterpret_cast<void**>(&original));
+    auto status=createHook(reinterpret_cast<void*>(resolveDetour(L"ChemDrawUI.dll",uint32_t(rva))),reinterpret_cast<void*>(replacement),reinterpret_cast<void**>(&original));
     if(status!=MH_OK) throw std::runtime_error("Could not install native arrow editing tracker");
 }
 }
@@ -534,6 +536,27 @@ bool arrowWorldEndpoints(Obj arrow,Point& tail,Point& head) {
     fn<void(*)(Obj,Point*)>(0xdc4d0)(arrow,&head);
     return finite(tail)&&finite(head);
 }
+bool arrowEndpointTangents(Obj arrow,Point& tail,Point& head,Point& tailOut,Point& headOut) {
+    if(!onUI()||!isArrow(arrow))return false;
+    UndoOff undo(arrow);
+    const auto pair=findPair(arrow);
+    Shape shape;
+    if(!pair.curve&&std::abs(at<double>(arrow,0x130))<1e-9&&
+        (!readShape(arrow,shape)||!shape.custom)&&arrowWorldEndpoints(arrow,tail,head)) {
+        const Point chord=sub(head,tail);
+        if(length(chord)<1e-6)return false;
+        headOut=unitDirection(chord,{});tailOut=mul(headOut,-1);
+        return true;
+    }
+    auto points=pair.curve?curvePoints(pair.curve):initialPath(arrow);
+    if(points.size()<6)return false;
+    tail=points[1];head=points[points.size()-2];
+    const Point chord=sub(head,tail);
+    if(length(chord)<1e-6)return false;
+    tailOut=unitDirection(sub(tail,points[2]),mul(chord,-1));
+    headOut=unitDirection(sub(head,points[points.size()-3]),chord);
+    return finite(tail)&&finite(head)&&finite(tailOut)&&finite(headOut);
+}
 bool drawAdjustments(Obj object,Obj highlighter,bool first,bool second) {
     // Adjustment artwork is emitted separately from CDArrow::DrawGraphic.
     // Give it the same owner so transparent resize previews retain its handles
@@ -542,6 +565,15 @@ bool drawAdjustments(Obj object,Obj highlighter,bool first,bool second) {
     return oldDrawAdjustment(object,highlighter,first,second);
 }
 bool standardArrowAttachments(Obj arrow) {return installed&&isArrow(arrow)&&tagString(arrow,standardTag)=="1";}
+bool mechanismArrowAttachments(Obj arrow) {
+    return installed&&isArrow(arrow)&&tagString(arrow,"Zuonik/SmartArrow/Mechanism/v1")=="1";
+}
+void rememberMechanismArrow(Obj arrow) {
+    if(installed&&isArrow(arrow)&&!mechanismArrowAttachments(arrow)) {
+        UndoOff off(arrow);
+        setTag(arrow,"Zuonik/SmartArrow/Mechanism/v1","1");
+    }
+}
 void rememberStandardArrow(Obj arrow) {
     if(installed&&isArrow(arrow)&&!standardArrowAttachments(arrow)) setTag(arrow,standardTag,"1");
 }
@@ -578,6 +610,7 @@ void arrowPathFlipped(Obj arrow) {
     arrowPathInvalidated(arrow);
 }
 void insetArrowEndpoints(Obj arrow,Point& tail,Point& head,double angle) {
+    arrowInsertionAttachment(arrow,true,tail);arrowInsertionAttachment(arrow,false,head);
     const double gap=endpointClearance(arrow,tail,head);
     Point chord=unitDirection(sub(head,tail),{});
     if(gap<=0||!std::isfinite(angle)) return;
@@ -730,6 +763,7 @@ void installArrowPaths() {
     trackerHook(0x25b720,arcMove,oldArcMove);trackerHook(0x25b100,arcFinish,oldArcFinish);trackerHook(0x25aea0,arcDestructor,oldArcDestructor);
     trackerHook(0x2562e0,splineCtor,oldSplineCtor);trackerHook(0x256ed0,splineMove,oldSplineMove);
     trackerHook(0x256b50,splineFinish,oldSplineFinish);trackerHook(0x2567b0,splineDestructor,oldSplineDestructor);
+    if (patchEnabled(16)) installArrowInsertion();
     installed=true;
 }
 }

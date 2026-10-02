@@ -42,8 +42,9 @@ template<class F> F fn(size_t rva) { return reinterpret_cast<F>(base + rva); }
 template<class F> F vf(Obj p, size_t slot) {
     return reinterpret_cast<F>(at<uintptr_t*>(p, 0)[slot / sizeof(void*)]);
 }
+MH_STATUS createHook(void*,void*,void**);
 template<class F> void hook(size_t rva, F replacement, F& original) {
-    const auto status = MH_CreateHook(reinterpret_cast<void*>(resolveDetour(L"ChemDrawBase.dll",uint32_t(rva))),
+    const auto status = createHook(reinterpret_cast<void*>(resolveDetour(L"ChemDrawBase.dll",uint32_t(rva))),
         reinterpret_cast<void*>(replacement), reinterpret_cast<void**>(&original));
     if (status != MH_OK) {
         char message[128]{};
@@ -112,6 +113,7 @@ void clearHighlights();
 void forgetPresentation(HWND);
 void bumpGeneration();
 void writeStatus(const char*);
+void writeReactionStatus(const char*);
 void writeGpuStatus(const char*);
 void writeGpuUiStatus(const char*);
 void writeToolbarStatus(const char*);

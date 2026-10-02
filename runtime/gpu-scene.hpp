@@ -98,6 +98,7 @@ inline std::shared_ptr<GpuScene> makeGpuScene() {
     });
 }
 void installGpuCanvas();
+uint64_t nextGpuSceneSerial();
 bool beginGpuCanvas(HWND,Obj,Gdiplus::Graphics*,bool preserve);
 std::shared_ptr<const GpuScene> endGpuCanvas();
 bool beginGpuFixedUi(HWND,Obj,Gdiplus::Graphics*);

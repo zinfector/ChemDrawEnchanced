@@ -317,8 +317,109 @@ bool changedBondTool(Obj bond,const GhostTool& selected,GhostTool& result) {
     }
     return result.order!=order||result.type!=type;
 }
+struct RingBondPlan {
+    std::array<Obj,64> atoms{},edges{};
+    std::array<int,64> order{},degree{};
+    std::array<bool,64> created{},processed{};
+    bool calculate(Obj page,const RingPoints& ring,bool aromatic,Obj sproutParent) {
+        const size_t count=ring.count;size_t newCount{};
+        for(size_t i=0;i<count;++i) {
+            atoms[i]=fn<Obj(*)(Obj,const Point*,Obj)>(0x7107c0)(page,&ring.points[i],nullptr);
+            created[i]=!atoms[i];newCount+=created[i];order[i]=1;
+            Obj* first{};Obj* last{};
+            if(atoms[i]) {
+                if(!bonds(atoms[i],first,last))return false;
+                degree[i]=first==last?0:int(last-first);
+            }
+        }
+        // DropRing creates the sprout before calling PlaceRing. Account for
+        // that existing endpoint/connector without creating them on hover.
+        if(sproutParent&&!alreadyBonded(sproutParent,atoms[0])) {
+            ++degree[0];
+            if(created[0]) {created[0]=false;--newCount;}
+        }
+        for(size_t i=0;i<count;++i) {
+            Obj* first{};Obj* last{};
+            if(atoms[i]&&atoms[(i+1)%count]&&bonds(atoms[i],first,last))
+                for(auto it=first;it!=last;++it)if(neighbor(*it,atoms[i])==atoms[(i+1)%count]) {
+                    edges[i]=*it;break;
+                }
+        }
+        if(!aromatic)return true;
+        // Mirror PlaceRing's read-only bond-order decision, including its
+        // creation boundary, unsaturated attachments and sequential degrees.
+        // No temporary native atoms, bonds, undo records or chemistry jobs.
+        bool phase=(GetAsyncKeyState(VK_SHIFT)&0x8000)!=0;
+        auto multiple=[&](size_t i) {
+            Obj* first{};Obj* last{};
+            if(!atoms[i]||!bonds(atoms[i],first,last))return false;
+            for(auto it=first;it!=last;++it)if(at<unsigned>(*it,0xdc)>1)return true;
+            return false;
+        };
+        size_t start{};bool anchored{};
+        if(newCount+2<=count) {
+            size_t boundary{};
+            for(size_t i=0;i<count;++i)if(created[i]!=created[(i+1)%count]) {boundary=i;break;}
+            // An absent seed edge permits an anchor with a single first edge.
+            // An existing seed edge instead preserves parity at the anchor.
+            for(bool singleFirst:{true,false}) {
+                if(singleFirst&&edges[0])continue;
+                for(size_t step=0;step<count&&!anchored;++step) {
+                    const size_t i=(boundary+step)%count,next=(i+1)%count;
+                    if(!created[i]&&!created[next]&&multiple(i)&&multiple(next)) {
+                        start=i;anchored=true;
+                        if(singleFirst)phase=false;else if(i&1)phase=!phase;
+                    }
+                }
+                if(anchored)break;
+            }
+        }
+        auto outsideDouble=[&](size_t i) {
+            Obj* first{};Obj* last{};
+            if(!atoms[i]||!bonds(atoms[i],first,last))return false;
+            const Obj previous=atoms[(i+count-1)%count],next=atoms[(i+1)%count];
+            for(auto it=first;it!=last;++it) {
+                const Obj other=neighbor(*it,atoms[i]);
+                if(other==previous||other==next)continue;
+                int nativeOrder=at<int>(*it,0xdc);
+                for(size_t edge=0;edge<count;++edge)
+                    if(processed[edge]&&edges[edge]==*it)nativeOrder=order[edge];
+                if(nativeOrder==2)return true;
+            }
+            return false;
+        };
+        for(size_t step=0;step<count;++step) {
+            const size_t i=(start+step)%count,next=(i+1)%count;
+            const bool left=outsideDouble(i),right=outsideDouble(next);
+            if(left&&right) {order[i]=1;if(phase&&step==0)phase=false;}
+            else if((left&&(degree[next]==0||degree[i]==2))||
+                    (right&&(degree[i]==0||degree[next]==2)))order[i]=1;
+            else {
+                const bool doubled=phase&&step==count-1||
+                    (size_t(phase)+1+step!=count&&(step&1)==size_t(phase));
+                order[i]=doubled?2:1;
+            }
+            processed[i]=true;
+            if(!edges[i]) {++degree[i];++degree[next];}
+        }
+        return true;
+    }
+};
+Point ringInsetEndpoint(Point vertex,Point toward,Point adjacent,double gap) {
+    const double length=std::hypot(toward.x-vertex.x,toward.y-vertex.y);
+    const double parent=std::hypot(adjacent.x-vertex.x,adjacent.y-vertex.y);
+    if(length<=0||parent<=0)return vertex;
+    const Point u{(toward.x-vertex.x)/length,(toward.y-vertex.y)/length,0};
+    const Point v{(adjacent.x-vertex.x)/parent,(adjacent.y-vertex.y)/parent,0};
+    const double cross=std::abs(u.x*v.y-u.y*v.x);
+    if(cross<=1e-8)return vertex;
+    // Native double-bond endpoints follow the neighboring ray plus this ray,
+    // scaled by perpendicular distance. For a regular ring the axial trim is
+    // gap*tan(pi/count), rather than the old gap/tan(pi/count).
+    return {vertex.x+(u.x+v.x)*gap/cross,vertex.y+(u.y+v.y)*gap/cross,vertex.z};
+}
 bool ringArtwork(Obj page,Obj atom,Obj bond,Point mouse,const GhostTool& tool,GhostArtwork& art) {
-    RingPoints ring;Point a{},b{};
+    RingPoints ring;Point a{},b{};Obj sproutParent{};
     if(bond) {
         if(!bondEndpoints(bond,a,b)) return false;
         // FuseRing chooses the less occupied side; this helper only counts
@@ -378,6 +479,7 @@ bool ringArtwork(Obj page,Obj atom,Obj bond,Point mouse,const GhostTool& tool,Gh
                 a=connectorEnd;
                 b={2*a.x-connectorStart.x,2*a.y-connectorStart.y,a.z};
                 if(!attachedRing(ring,a,b,tool)) return false;
+                sproutParent=atom;
                 sprouted=true;
             }
         }
@@ -415,37 +517,18 @@ bool ringArtwork(Obj page,Obj atom,Obj bond,Point mouse,const GhostTool& tool,Gh
             if(!attachedRing(ring,a,b,tool)) return false;
         } else if(!sprouted&&degree==0&&!ring.calculate(a,b,tool)) return false;
     }
-    Point center{};
-    for(size_t i=0;i<ring.count;++i) { center.x+=ring.points[i].x;center.y+=ring.points[i].y; }
-    center.x/=double(ring.count);center.y/=double(ring.count);
     const bool aromatic=tool.subtype==11||tool.subtype==12;
-    const size_t phase=bond&&at<int>(bond,0xdc)==1?1:0;
+    RingBondPlan plan;if(!plan.calculate(page,ring,aromatic,sproutParent))return false;
     for(size_t i=0;i<ring.count;++i) {
-        bool occupied=bond&&i==0;
-        if(atom||bond) {
-            const Obj left=fn<Obj(*)(Obj,const Point*,Obj)>(0x7107c0)(page,&ring.points[i],nullptr);
-            const Obj right=fn<Obj(*)(Obj,const Point*,Obj)>(0x7107c0)(page,&ring.points[(i+1)%ring.count],nullptr);
-            occupied=occupied||alreadyBonded(left,right);
-        }
-        const auto a=ring.points[i],b=ring.points[(i+1)%ring.count];
-        if(!occupied) stroke(art,a,b,tool.width);
-        if(aromatic&&i%2==phase&&(ring.count%2==0||i!=ring.count-1)) {
-            // Fixed inside double bonds, matching the aromatic ring tools.
-            const double length=std::hypot(b.x-a.x,b.y-a.y);
+        const bool occupied=plan.edges[i]||(bond&&i==0);
+        const auto ringStart=ring.points[i],ringEnd=ring.points[(i+1)%ring.count];
+        if(!occupied) stroke(art,ringStart,ringEnd,tool.width);
+        if(aromatic&&plan.order[i]==2) {
+            const double length=std::hypot(ringEnd.x-ringStart.x,ringEnd.y-ringStart.y);
             if(length<=0) continue;
-            Point n{-(b.y-a.y)/length,(b.x-a.x)/length,0};
-            if(n.x*(center.x-a.x)+n.y*(center.y-a.y)<0) { n.x=-n.x;n.y=-n.y; }
-            const double gap=spacing(tool,length),trim=std::min(length*.35,gap/std::tan(std::numbers::pi/double(ring.count)));
-            if(occupied) {
-                const Obj left=fn<Obj(*)(Obj,const Point*,Obj)>(0x7107c0)(page,&a,nullptr);
-                const Obj right=fn<Obj(*)(Obj,const Point*,Obj)>(0x7107c0)(page,&b,nullptr);
-                Obj* first{};Obj* last{};bool doubled{};
-                if(left&&bonds(left,first,last)) for(auto it=first;it!=last;++it)
-                    if(neighbor(*it,left)==right&&at<int>(*it,0xdc)>=2) doubled=true;
-                if(doubled) continue;
-            }
-            stroke(art,{a.x+n.x*gap+(b.x-a.x)*trim/length,a.y+n.y*gap+(b.y-a.y)*trim/length,a.z},
-                {b.x+n.x*gap-(b.x-a.x)*trim/length,b.y+n.y*gap-(b.y-a.y)*trim/length,b.z},tool.width);
+            const double gap=spacing(tool,length);
+            stroke(art,ringInsetEndpoint(ringStart,ringEnd,ring.points[(i+ring.count-1)%ring.count],gap),
+                ringInsetEndpoint(ringEnd,ringStart,ring.points[(i+2)%ring.count],gap),tool.width);
         }
     }
     return !art.strokes.empty();

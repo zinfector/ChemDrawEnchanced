@@ -1244,6 +1244,7 @@ static void restoreHoverBindings() noexcept {
     }
     hoverBindings.clear();
 }
+uint64_t nextGpuSceneSerial() {return ++nextScene;}
 bool beginGpuHover(HWND w,Obj port) {
     if(!onUI()||!w||!port||hoverTarget||fixedUiTarget||(trackingDoc&&docWindow(trackingDoc)!=w)||backgroundWindow||disabled[w]||failed) return false;
     if(recordingWindow&&recordingWindow!=w) return false;

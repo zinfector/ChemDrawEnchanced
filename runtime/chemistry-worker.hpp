@@ -3,6 +3,7 @@
 
 namespace cd {
 void installChemistryWorker();
+void startChemistryWorkers() noexcept;
 // UI-only preflight. False keeps the native queue intact until a result is ready.
 bool preparePlacementChemistry(Obj page);
 bool chemistryWorkerPending(Obj page) noexcept;

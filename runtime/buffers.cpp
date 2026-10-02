@@ -2,6 +2,7 @@
 #include "gpu-ui.hpp"
 #include "gpu-scene.hpp"
 #include "arrow-path.hpp"
+#include "arrow-insertion.hpp"
 #include "placement-runtime.hpp"
 #include "smart-align.hpp"
 #include <intrin.h>
@@ -360,7 +361,7 @@ static void copyWork(Obj tracker) {
         // OnMouseMove has now finished positioning its temporary endpoint.
         // Publish its circle separately, before the updated drawing scene.
         updateGpuPlacementEndpoint(tracker);
-        auto scene=withSelectionFeedback(currentGpuTrackingScene());
+        auto scene=withSelectionFeedback(arrowInsertionPreview(currentGpuTrackingScene()));
           if(!scene||!publishGpuCanvasScene(doc,scene,smartAlignmentFeedback(tracker))) disableGpuCanvas(doc);
     }
 }
@@ -376,6 +377,7 @@ static short performTrack(Obj tracker) {
     short result{};
     try {
         SelectionFeedbackScope feedback(tracker,doc,gpu,selectionEpoch);
+        beginArrowInsertionTrace(tracker,gpu);
         beginSmartAlignment(tracker,doc,gpu);
         result=oldTrack(tracker);
     }
@@ -481,7 +483,7 @@ void installBuffers() {
     hook(0x607950,blit,oldBlit); hook(0x6d0640,performTrack,oldTrack);
     hook(0x70e360,drawOffscreen,oldOffscreen); hook(0x70da50,drawObjects,oldDraw);
     hook(0x2ea7e0,drawBondGraphic,oldBondGraphic);
-    if (patchEnabled(3)) { hook(0x8469e4,allocate,oldNew); hook(0x12dbc0,deallocate,oldDelete); }
+    if (patchEnabled(3)) hook(0x8469e4,allocate,oldNew); if (patchEnabled(3)) hook(0x12dbc0,deallocate,oldDelete);
     hook(0x626c80,setClip,oldSetClip);
     hook(0x59fea0,hideCursor,oldHideCursor);
     hook(0x419560,drawLasso,oldLassoDraw);

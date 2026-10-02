@@ -2,10 +2,12 @@
 #include "gpu-scene.hpp"
 #include "curved-arrow.hpp"
 #include "arrow-snap-math.hpp"
+#include "arrow-insertion.hpp"
 #include <string>
 #include <sstream>
 #include <iomanip>
 #include <locale>
+#include <unordered_set>
 #include <windowsx.h>
 
 namespace cd {
@@ -62,6 +64,8 @@ struct ShapeScope {
 Point anchor(Obj arrow,int id,Point fallback) {
     Obj page=at<Obj>(arrow,0x60),o=id>=0?fn<Obj(*)(Obj,int)>(0x712f80)(page,id):nullptr;
     if(!o||!at<uint8_t>(o,0x34)) return fallback;
+    Point attached{};if(arrowInsertionAttachment(arrow,id==at<int>(arrow,0x1f0),attached))return attached;
+    Point molecule{};if(moleculeArrowAnchor(o,molecule))return molecule;
     if(at<uintptr_t>(o,0)==base+0x8b34f8) return at<Point>(o,0x1f8);
     if(at<uintptr_t>(o,0)==base+0x8babc0) {
         Obj a=at<Obj>(o,0xc0),b=at<Obj>(o,0xc8);
@@ -209,3 +213,4 @@ void validate(Obj arrow) {
     }
 }
 #include "native-arrow-editing.inc"
+#include "arrow-insertion.inc"

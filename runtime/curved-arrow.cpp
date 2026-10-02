@@ -3,7 +3,10 @@
 #include "gpu-preview.hpp"
 #include "arrow-snap-math.hpp"
 #include "arrow-path.hpp"
-#include <bcrypt.h>
+#include "startup.hpp"
+#include "arrow-insertion.hpp"
+#include "smart-align.hpp"
+#include "reaction-suggestion.hpp"
 
 namespace cd {
 namespace {
@@ -38,29 +41,7 @@ thread_local double preservedAngle{};
 struct EndpointOverride { Obj arrow{};Point head{},tail{}; };
 thread_local EndpointOverride exactEndpoints;
 
-bool supportedHash(HMODULE handle,const char* expected) {
-    wchar_t path[32768]{};
-    if(!GetModuleFileNameW(handle,path,DWORD(std::size(path)))) return false;
-    HANDLE file=CreateFileW(path,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_DELETE,nullptr,OPEN_EXISTING,0,nullptr);
-    if(file==INVALID_HANDLE_VALUE) return false;
-    BCRYPT_ALG_HANDLE algorithm{};BCRYPT_HASH_HANDLE hash{};
-    bool ok=BCryptOpenAlgorithmProvider(&algorithm,BCRYPT_SHA256_ALGORITHM,nullptr,0)>=0;
-    if(ok) ok=BCryptCreateHash(algorithm,&hash,nullptr,0,nullptr,0,0)>=0;
-    std::array<uint8_t,65536> data{};DWORD read{};
-    while(ok) {
-        if(!ReadFile(file,data.data(),DWORD(data.size()),&read,nullptr)) { ok=false;break; }
-        if(!read) break;
-        ok=BCryptHashData(hash,data.data(),read,0)>=0;
-    }
-    std::array<uint8_t,32> digest{};
-    if(ok) ok=BCryptFinishHash(hash,digest.data(),ULONG(digest.size()),0)>=0;
-    if(hash) BCryptDestroyHash(hash);
-    if(algorithm) BCryptCloseAlgorithmProvider(algorithm,0);
-    CloseHandle(file);
-    char hex[65]{};
-    for(size_t i=0;i<digest.size();++i) sprintf_s(hex+2*i,3,"%02x",unsigned(digest[i]));
-    return ok&&strcmp(hex,expected)==0;
-}
+
 Obj byID(Obj page,int id) { return id>=0?fn<Obj(*)(Obj,int)>(0x712f80)(page,id):nullptr; }
 bool eligible(Obj object,const Point& point) {
     return object&&at<uint8_t>(object,0x34)&&vf<bool(*)(Obj)>(object,0xb8)(object)&&
@@ -133,14 +114,20 @@ HWND windowForPage(Obj page) {
     return port?portWindow(port):nullptr;
 }
 Obj* factory(Obj* result,Obj page,uintptr_t p3,Point* point,uintptr_t p5,uintptr_t p6,uint8_t p7) {
+    Point aligned{};if(point&&smartAlignmentPlacementPoint(page,*point,aligned))point=&aligned;
     if(!onUI()||!enabled) return oldFactory(result,page,p3,point,p5,p6,p7);
     const auto previous=hoverTargets.find(page);
     Query q{page,nullptr,-1,previous==hoverTargets.end()?-1:previous->second};QueryScope scope(q);
     Obj* returned=oldFactory(result,page,p3,point,p5,p6,p7);
-    if(result&&result[0]) {gesture={result[0],page,windowForPage(page)};arrowPathDrawingStarted();}
+    if(result&&result[0]) {
+        gesture={result[0],page,windowForPage(page)};arrowPathDrawingStarted();
+        Obj arrow=at<Obj>(result[0],0x138);
+        if(arrow)rememberMechanismArrow(arrow);
+    }
     return returned;
 }
 void move(Obj tracker) {
+    smartAlignmentDrawingMove(tracker);
     if(!onUI()||!enabled) { oldMove(tracker);return; }
     Obj page=at<Obj>(tracker,8),arrow=at<Obj>(tracker,0x138);
     if(gesture.tracker!=tracker) gesture={tracker,page,windowForPage(page)};
@@ -159,6 +146,7 @@ void setAngle(Obj arrow,double value) {
 }
 Point linkedAnchor(Obj object,const Point& fallback) {
     if(!object) return fallback;
+    Point molecule{};if(moleculeArrowAnchor(object,molecule))return molecule;
     const uintptr_t table=at<uintptr_t>(object,0);
     Point point=fallback;
     if(table==base+0x8b34f8) point=at<Point>(object,0x1f8);
@@ -173,11 +161,18 @@ Point linkedAnchor(Obj object,const Point& fallback) {
 }
 #include "native-arrow-tools.inc"
 void setEndpoints(Obj arrow,const Point* head,const Point* tail) {
+    Point snappedHead{},snappedTail{};
+    if(head&&tail&&smartAlignmentDrawingArrow(arrow,*head,*tail,snappedHead,snappedTail)) {
+        head=&snappedHead;tail=&snappedTail;
+    }
     if(onUI()&&exactEndpoints.arrow==arrow) {
         // Keep the native attachment IDs, but leave a small visible clearance
         // along the arc's tangents inside native alignment's undo guards.
         Point visibleTail=exactEndpoints.tail,visibleHead=exactEndpoints.head;
         insetArrowEndpoints(arrow,visibleTail,visibleHead,at<double>(arrow,0x130));
+        if(smartAlignmentDrawingArrow(arrow,visibleHead,visibleTail,snappedHead,snappedTail)) {
+            visibleHead=snappedHead;visibleTail=snappedTail;
+        }
         if(!setMirroredArrowEndpoints(arrow,&visibleHead,&visibleTail)) oldEndpoints(arrow,&visibleHead,&visibleTail);
     } else if(!onUI()||!enabled||flippingArrow==arrow||
         (at<int>(arrow,0x1f0)<0&&at<int>(arrow,0x1f4)<0)||!setMirroredArrowEndpoints(arrow,head,tail))
@@ -244,7 +239,7 @@ short finish(Obj tracker) {
     return result;
 }
 template<class F> void uiHook(size_t rva,F replacement,F& original) {
-    const auto result=MH_CreateHook(reinterpret_cast<void*>(resolveDetour(L"ChemDrawUI.dll",uint32_t(rva))),reinterpret_cast<void*>(replacement),
+    const auto result=createHook(reinterpret_cast<void*>(resolveDetour(L"ChemDrawUI.dll",uint32_t(rva))),reinterpret_cast<void*>(replacement),
         reinterpret_cast<void**>(&original));
     if(result!=MH_OK) throw std::runtime_error("Could not install native electron-arrow tracker hook");
 }
@@ -253,7 +248,7 @@ LRESULT CALLBACK shortcutMessages(int code,WPARAM removal,LPARAM value) {
         auto& message=*reinterpret_cast<MSG*>(value);
         // MFC/CLR accelerator translation runs before the drawing-window proc.
         // Intercept retrieved keys on this UI thread before either consumes them.
-        if(message.hwnd&&(arrowPathQueuedInput(message)||arrowPathShortcut(message.hwnd,message.message,message.wParam,message.lParam)||
+        if(message.hwnd&&(reactionSuggestionQueuedInput(message)||arrowPathQueuedInput(message)||arrowPathShortcut(message.hwnd,message.message,message.wParam,message.lParam)||
             arrowShortcut(message.hwnd,message.message,message.wParam,message.lParam))) {
             message.message=WM_NULL;message.wParam=0;message.lParam=0;
         }
@@ -266,6 +261,20 @@ Point arrowAttachmentPoint(Obj target,Point anchor,Point outward,double clearanc
     if(!onUI()||!target||!at<uint8_t>(target,0x34)||!std::isfinite(length)||length<=1e-8||
         !std::isfinite(clearance)||clearance<0) return anchor;
     outward={outward.x/length,outward.y/length,0};
+    const Point axisAnchor=anchor;
+    if(at<uintptr_t>(target,0)==base+0x89a468) {
+        RectD bounds{};vf<RectD*(*)(Obj,RectD*)>(target,0x1d8)(target,&bounds);
+        if(valid(bounds)) {
+            double distance=std::numeric_limits<double>::infinity();
+            if(outward.x>1e-8)distance=std::min(distance,(bounds.r-anchor.x)/outward.x);
+            else if(outward.x<-1e-8)distance=std::min(distance,(bounds.l-anchor.x)/outward.x);
+            if(outward.y>1e-8)distance=std::min(distance,(bounds.b-anchor.y)/outward.y);
+            else if(outward.y<-1e-8)distance=std::min(distance,(bounds.t-anchor.y)/outward.y);
+            if(std::isfinite(distance)&&distance>=0) {
+                anchor.x+=outward.x*distance;anchor.y+=outward.y*distance;
+            }
+        }
+    }
     std::vector<BondInk> ink;
     if(doubleBondInk(target,ink)) {
         Obj a=at<Obj>(target,0xc0),b=at<Obj>(target,0xc8);
@@ -297,7 +306,8 @@ Point arrowAttachmentPoint(Obj target,Point anchor,Point outward,double clearanc
             }
         }
     }
-    return {anchor.x+outward.x*clearance,anchor.y+outward.y*clearance,anchor.z};
+    const double along=(anchor.x-axisAnchor.x)*outward.x+(anchor.y-axisAnchor.y)*outward.y+clearance;
+    return {axisAnchor.x+outward.x*along,axisAnchor.y+outward.y*along,axisAnchor.z};
 }
 bool regularArrowEndpoints(Obj arrow,Point& tail,Point& head) {
     if(!onUI()||!regular.running||regular.arrow!=arrow||
@@ -394,8 +404,8 @@ bool arrowShortcut(HWND window,UINT message,WPARAM key,LPARAM flags) {
 }
 void installCurvedArrows() {
     auto ui=GetModuleHandleW(L"ChemDrawUI.dll");
-    if(!ui||!supportedHash(reinterpret_cast<HMODULE>(base),"0bf203d7ddf0c700bf9d44fd156425d8df274277fdaea58fa511cfbddc51861a")||
-        !supportedHash(ui,"b9af968d2e75822fc47a4e5a4d2f348ea636804c712763b73b3536a30268a4f2")) {
+    if(!ui||!supportedStartupHash(reinterpret_cast<HMODULE>(base),"0bf203d7ddf0c700bf9d44fd156425d8df274277fdaea58fa511cfbddc51861a")||
+        !supportedStartupHash(ui,"b9af968d2e75822fc47a4e5a4d2f348ea636804c712763b73b3536a30268a4f2")) {
         writeArrowStatus("Inactive: exact supported ChemDrawBase/ChemDrawUI hashes did not match or UI module not loaded.\r\n");
         return;
     }
@@ -416,7 +426,7 @@ void installCurvedArrows() {
     installed=true;
     shortcutHook=SetWindowsHookExW(WH_GETMESSAGE,shortcutMessages,module,uiThread);
     if(!shortcutHook) throw std::runtime_error("Could not install smart-arrow keyboard message hook");
-    writeArrowStatus(enabled?"Revision 94: curved ghost sweep matches native arrows, including its head tangent and attachment clearance; native arrow resize handles restored in arrow mode and retained in transparent resize previews; straight-shaft sagitta follows the pointer; double-bond snapping and endpoint clearance use native visible stroke geometry; arrow palette ID corrected; transparent arrow tracking overlays and native atom/bond target highlights; native arrow, cyclopentadiene and benzene cursor ghosts; atom/bond presses start fresh arrows; shaft editing requires a real shaft hit; flipped arcs rebuild attachment clearance in the mirrored plane; attachment maintenance runs after native validation and is protected from re-entry; snapping, native attachments and endpoint clearance integrated into the normal arrow palette. Native arrow subtypes and free drawing retained. Drag endpoints to reattach; select an arc and drag its midpoint. Double-click a shaft to edit its native Pen path; S toggles smooth/corner; Delete removes an interior knot. Native undo includes attachment changes.\r\n":
+    writeArrowStatus(enabled?"Revision 106: molecule insertion minimum shaft length corrected; one grouped molecule and nested native arrow shafts supported for insertion; linked palette arrows admitted for molecule insertion; arrow insertion candidate filtering and head units corrected; native molecule insertion on arrow shafts; shared background startup hashes; curved ghost sweep matches native arrows, including its head tangent and attachment clearance; native arrow resize handles restored in arrow mode and retained in transparent resize previews; straight-shaft sagitta follows the pointer; double-bond snapping and endpoint clearance use native visible stroke geometry; arrow palette ID corrected; transparent arrow tracking overlays and native atom/bond target highlights; native arrow, cyclopentadiene and benzene cursor ghosts; atom/bond presses start fresh arrows; shaft editing requires a real shaft hit; flipped arcs rebuild attachment clearance in the mirrored plane; attachment maintenance runs after native validation and is protected from re-entry; snapping, native attachments and endpoint clearance integrated into the normal arrow palette. Native arrow subtypes and free drawing retained. Drag endpoints to reattach; select an arc and drag its midpoint. Double-click a shaft to edit its native Pen path; S toggles smooth/corner; Delete removes an interior knot. Native undo includes attachment changes.\r\n":
         "Smart arrows installed, disabled by CHEMDRAW_SMART_ARROWS=0.\r\n");
 }
 void removeArrowShortcuts() {

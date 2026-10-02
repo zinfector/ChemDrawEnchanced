@@ -82,6 +82,15 @@
   },
   {
     "module": "ChemDrawBase.dll",
+    "rva": "0x16a290",
+    "function": "FinishTracking",
+    "prototype": "short FinishTracking(DragOrResizeBase * this)",
+    "source": "arrow-insertion.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
     "rva": "0x16b660",
     "function": "ConstrainedPoint",
     "prototype": "PointTemplate3D<double> ConstrainedPoint(DragTrackingHandler * this)",
@@ -352,10 +361,28 @@
   },
   {
     "module": "ChemDrawBase.dll",
+    "rva": "0x2c8d10",
+    "function": "Modified",
+    "prototype": "void Modified(CDAtom * this)",
+    "source": "reaction-suggestion.cpp",
+    "length": 124,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
     "rva": "0x2c9550",
     "function": "Near",
     "prototype": "bool Near(CDAtom * this, PointTemplate3D<double> * param_1)",
     "source": "spatial.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2cdc40",
+    "function": "SetPos",
+    "prototype": "void SetPos(CDAtom * this, PointTemplate3D<double> * param_1)",
+    "source": "smart-align.cpp",
     "length": 128,
     "context_anchor": 0
   },
@@ -375,6 +402,15 @@
     "prototype": "void HighlightObject(CDBond * this, ObjectHighlighterBase * param_1)",
     "source": "spatial.cpp",
     "length": 90,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x2efc00",
+    "function": "Modified",
+    "prototype": "void Modified(CDBond * this)",
+    "source": "reaction-suggestion.cpp",
+    "length": 77,
     "context_anchor": 0
   },
   {
@@ -469,6 +505,15 @@
   },
   {
     "module": "ChemDrawBase.dll",
+    "rva": "0x3e3570",
+    "function": "CurPointToPageInternPoint",
+    "prototype": "Page * CurPointToPageInternPoint(Page * this, PointTemplate3D<int> * param_1, PointTemplate3D<double> * param_2, bool param_3)",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
     "rva": "0x419560",
     "function": "DrawLasso",
     "prototype": "void DrawLasso(Page * param_1, CwPortBase * param_2)",
@@ -496,10 +541,55 @@
   },
   {
     "module": "ChemDrawBase.dll",
+    "rva": "0x4fa660",
+    "function": "SetNewPoint",
+    "prototype": "void SetNewPoint(TrackingHandlerBase * this, PointTemplate3D<int> * param_1)",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x4fa700",
+    "function": "SetNewPoint",
+    "prototype": "void SetNewPoint(TrackingHandlerBase * this, PointTemplate3D<double> * param_1)",
+    "source": "smart-align.cpp",
+    "length": 67,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x4fb990",
+    "function": "DropFirstBond",
+    "prototype": "void DropFirstBond(Page * param_1, CDAtom * param_2, PointTemplate3D<double> * param_3, CDAtom * * param_4, CDAtom * * param_5, char * param_6, char * param_7, bool param_8)",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
     "rva": "0x4fbd20",
     "function": "FUN_1804fbd20",
     "prototype": "undefined FUN_1804fbd20()",
     "source": "bond-placement.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x4feb40",
+    "function": "CalcRing",
+    "prototype": "void CalcRing(vector<cs::PointTemplate3D<double>,std::allocator<cs::PointTemplate3D<double>_>_> * param_1, bool param_2)",
+    "source": "smart-align.cpp",
+    "length": 118,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
+    "rva": "0x4feef0",
+    "function": "DropRing",
+    "prototype": "short DropRing(Page * param_1, PointTemplate3D<double> param_2, bool param_3, bool param_4, bool param_5)",
+    "source": "smart-align.cpp",
     "length": 128,
     "context_anchor": 0
   },
@@ -955,11 +1045,65 @@
   },
   {
     "module": "ChemDrawBase.dll",
+    "rva": "0x824db0",
+    "function": "FUN_180824db0",
+    "prototype": "undefined FUN_180824db0()",
+    "source": "startup.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawBase.dll",
     "rva": "0x8469e4",
     "function": "FUN_1808469e4",
     "prototype": "undefined FUN_1808469e4()",
     "source": "buffers.cpp",
     "length": 59,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x250730",
+    "function": "FUN_180250730",
+    "prototype": "undefined FUN_180250730()",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x2562e0",
+    "function": "FUN_1802562e0",
+    "prototype": "undefined FUN_1802562e0()",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x2567b0",
+    "function": "FUN_1802567b0",
+    "prototype": "undefined FUN_1802567b0()",
+    "source": "native-arrow-editing.inc",
+    "length": 78,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x256b50",
+    "function": "FUN_180256b50",
+    "prototype": "undefined FUN_180256b50()",
+    "source": "native-arrow-editing.inc",
+    "length": 51,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x256ed0",
+    "function": "FUN_180256ed0",
+    "prototype": "undefined FUN_180256ed0()",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
     "context_anchor": 0
   },
   {
@@ -973,12 +1117,30 @@
   },
   {
     "module": "ChemDrawUI.dll",
+    "rva": "0x25aea0",
+    "function": "FUN_18025aea0",
+    "prototype": "undefined FUN_18025aea0()",
+    "source": "native-arrow-editing.inc",
+    "length": 63,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
     "rva": "0x25af20",
     "function": "FUN_18025af20",
     "prototype": "undefined FUN_18025af20()",
     "source": "curved-arrow.cpp",
     "length": 176,
     "context_anchor": 48
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25b100",
+    "function": "FUN_18025b100",
+    "prototype": "undefined FUN_18025b100()",
+    "source": "native-arrow-editing.inc",
+    "length": 128,
+    "context_anchor": 0
   },
   {
     "module": "ChemDrawUI.dll",
@@ -995,6 +1157,15 @@
     "function": "FUN_18025b3d0",
     "prototype": "undefined FUN_18025b3d0()",
     "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x25b720",
+    "function": "FUN_18025b720",
+    "prototype": "undefined FUN_18025b720()",
+    "source": "native-arrow-editing.inc",
     "length": 128,
     "context_anchor": 0
   },
@@ -1049,6 +1220,51 @@
     "function": "FUN_18025f3f0",
     "prototype": "undefined FUN_18025f3f0()",
     "source": "curved-arrow.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x268290",
+    "function": "OnMouseMove",
+    "prototype": "void OnMouseMove(BondTrackerBase * this)",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x26dab0",
+    "function": "FUN_18026dab0",
+    "prototype": "undefined FUN_18026dab0()",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x275360",
+    "function": "FUN_180275360",
+    "prototype": "undefined FUN_180275360()",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x287c30",
+    "function": "FUN_180287c30",
+    "prototype": "undefined FUN_180287c30()",
+    "source": "smart-align.cpp",
+    "length": 128,
+    "context_anchor": 0
+  },
+  {
+    "module": "ChemDrawUI.dll",
+    "rva": "0x287ea0",
+    "function": "FUN_180287ea0",
+    "prototype": "undefined FUN_180287ea0()",
+    "source": "smart-align.cpp",
     "length": 128,
     "context_anchor": 0
   }
